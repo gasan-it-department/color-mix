@@ -306,6 +306,25 @@ abstract final class AppTheme {
         hoverElevation: 0,
         highlightElevation: 0,
       ),
+      chipTheme: ChipThemeData(
+        elevation: 0,
+        pressElevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        showCheckmark: false,
+        backgroundColor: Colors.transparent,
+        selectedColor: scheme.primaryContainer,
+        labelStyle: textTheme.bodyMedium,
+        shape: const StadiumBorder(),
+        side: WidgetStateBorderSide.resolveWith(
+          (states) => BorderSide(
+            color: states.contains(WidgetState.selected)
+                ? scheme.primary
+                : scheme.outline,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
           side: WidgetStatePropertyAll(BorderSide(color: scheme.outline)),

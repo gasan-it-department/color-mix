@@ -19,4 +19,9 @@ abstract final class Routes {
   static const formulas = '/formulas';
   static const scale = '/scale';
   static const settings = '/settings';
+
+  /// editor for the color picked in Color Studio
+  static const formulaNew = '/formula/new';
+
+  static String formula(String id) => '/formula/$id';
 }

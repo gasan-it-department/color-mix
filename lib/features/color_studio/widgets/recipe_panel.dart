@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
 import 'package:colormix_studio/core/widgets/section_card.dart';
 import 'package:colormix_studio/features/color_studio/color_target.dart';
@@ -51,19 +53,21 @@ class RecipePanel extends ConsumerWidget {
               style: muted,
             ),
           const SizedBox(height: 16),
-          const FilledButton(onPressed: null, child: Text('Create formula')),
-          const SizedBox(height: 6),
-          Text(
-            'The formula calculator isn\'t in this build yet.',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+          FilledButton(
+            onPressed: () => _createFormula(context),
+            child: const Text('Create formula'),
           ),
         ],
       ),
     );
   }
+}
+
+void _createFormula(BuildContext context) {
+  final router = GoRouter.of(context);
+  // on phones this panel sits in the details sheet, close it first
+  if (ModalRoute.of(context) is ModalBottomSheetRoute) Navigator.pop(context);
+  router.push(Routes.formulaNew);
 }
 
 class _RecipeBody extends StatelessWidget {

@@ -42,6 +42,7 @@ dependencies:
   universal_ble: ^3.1.2
   flex_color_picker: ^4.0.0
   wakelock_plus: ^1.8.2
+  uuid: ^4.6.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -40,11 +40,10 @@ void main() {
     expect(find.text('20%'), findsOneWidget);
     expect(find.text('1:1 by weight'), findsOneWidget);
 
-    // the calculator is phase 3
     final create = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Create formula'),
     );
-    expect(create.onPressed, isNull);
+    expect(create.onPressed, isNotNull);
 
     await unmountApp(tester);
   });

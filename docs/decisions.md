@@ -39,7 +39,19 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 - Picker: flex_color_picker's `ColorWheelPicker` (hue ring + saturation/brightness square) plus my own H/S/B sliders, HEX field and RGB readout. HSV lives in the picker state so the hue survives greys. Color name from `ColorTools.nameThatColor`.
 - Opening the picker with nothing picked makes its starting color the target. A picked shade stays the target until the picker is actually moved.
 - Phones: target pinned in a strip above the picker, recipe in a sheet. Sheets open on the root navigator so they cover the bottom bar.
-- "Create formula" is there but disabled until phase 3.
+## Formula calculator (phase 3)
+
+- All the maths is in `lib/features/formulation/formula_math.dart`, pure Dart: parsing, largest-remainder split, developer weight, rescaling, and `calculateFormula` which returns the weights plus every problem in plain words. The editor just shows what it returns.
+- Grams take one decimal, percentages two, ratios two. `60,5` works as well as `60.5`.
+- Developer weight = dye × ratio, rounded half up to 0.1 g. Ratios are dye : developer by weight only, the section says so and warns 1 mL isn't always 1 g.
+- A new formula from a shade without a recipe starts at Color A 100% and no developer choice. The stylist has to pick a ratio or "No developer" before it saves, nothing is assumed.
+- Blocking problems: no name, dye not a number / 0 / over 1 kg, a color without a name or with 0% / over 100%, colors not making exactly 100%, a color rounding to 0.0 g, no developer choice, a custom ratio outside 1:0.1 to 1:5, mixture over 1 kg. Only a warning: mixture over 700 g (little room for the bowl).
+- Adding a color hands it whatever share is left. "Split evenly" uses the same largest remainder (33.34 / 33.33 / 33.33).
+- Formulas started from a demo recipe stay tagged demo even after edits, they're still not validated.
+- Developer strength (10/20/30/40 vol) is optional, record only.
+- Saved formulas open in the same editor, so "recalculate for a different quantity" is just changing the dye amount and saving.
+- Unsaved changes ask before leaving, reset asks before throwing edits away. Both are bottom sheets, not dialogs.
+- Start weighing is there but disabled until phase 4.
 
 ## Scale
 

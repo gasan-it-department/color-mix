@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
 import 'package:colormix_studio/shared/models/color_formula.dart';
 import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
@@ -23,7 +25,8 @@ class FormulaTile extends StatelessWidget {
         : '${f.developerRatio!.label} developer';
 
     return ListTile(
-      onTap: onTap,
+      // opens the editor unless the caller wants something else
+      onTap: onTap ?? () => context.push(Routes.formula(f.id)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
       leading: ColorSwatchDot(rgb: f.targetRgb),
       title: Row(

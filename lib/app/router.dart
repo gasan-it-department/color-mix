@@ -5,6 +5,7 @@ import 'package:colormix_studio/app/shell.dart';
 import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/features/color_studio/color_studio_screen.dart';
 import 'package:colormix_studio/features/dashboard/dashboard_screen.dart';
+import 'package:colormix_studio/features/formulation/formula_editor_screen.dart';
 import 'package:colormix_studio/features/saved_formulas/saved_formulas_screen.dart';
 import 'package:colormix_studio/features/scale/scale_screen.dart';
 import 'package:colormix_studio/features/settings/settings_screen.dart';
@@ -55,6 +56,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/formula/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return FormulaEditorScreen(formulaId: id == 'new' ? null : id);
+        },
       ),
     ],
   );

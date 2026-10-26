@@ -16,3 +16,9 @@ final formulasProvider = StreamProvider<List<ColorFormula>>(
 final recentFormulasProvider = StreamProvider<List<ColorFormula>>(
   (ref) => ref.watch(formulaRepositoryProvider).watchAll(limit: 5),
 );
+
+/// loaded fresh each time the editor opens
+final formulaByIdProvider = FutureProvider.autoDispose
+    .family<ColorFormula?, String>(
+      (ref, id) => ref.watch(formulaRepositoryProvider).find(id),
+    );
