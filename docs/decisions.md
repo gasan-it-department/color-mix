@@ -77,13 +77,24 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 
 - Written ahead of the firmware in `docs/protocol.md`, with the Dart codec in `lib/core/bluetooth/esp32_protocol.dart` and its test vectors, so phase 5 and phase 6 code to the same bytes.
 
+## Firmware (phase 5)
+
+- `firmware/esp32_color_mix_scale`, PlatformIO, Arduino core 3.3 through the official espressif32 v8 platform. Details and wiring in its README.
+- The parts with no hardware (frame encoding, control decoding, median / steady filters, calibration maths) live in `lib/scale_core` with no Arduino includes, and `pio test -e native` runs them on the PC with the same frame vectors as the Dart tests. Both sides are checked against the same bytes without a board.
+- Nothing blocks the loop. The HX711 is only read when it says it has a sample, calibration averages the next 20 samples while frames keep going, control writes are queued from the BLE task and run in the loop.
+- Calibration is two steps, zero then a known weight (at least 10 g), saved in NVS. The known-weight step needs a zero from the same power-up, and both fail if the reading moved while averaging. CAL_ZERO / CAL_KNOWN_MASS are in the firmware already, so phase 7 is app work only.
+- Device tare isn't saved. The weighing screen doesn't use it.
+- A dead HX711 still gets frames out every 100 ms with the sensor fault flag, so "board alive, sensor not" is something the app can show.
+- No BLE pairing. Prototype on a bench, noted in the firmware README.
+- Built, not run on hardware: there isn't a board here yet. `docs/hardware_test.md` is the sheet for the first real run (0 / 50 / 100 / 200 / 500 g, noise, drift, off-centre, BLE busy). Its numbers set the app's tolerance and steady threshold.
+
 ## Scale
 
 - Every weight goes through `ScaleDevice` (`lib/core/bluetooth/scale_device.dart`), simulator included.
 - The app decides "stable", not the firmware. Configurable threshold and dwell, same rule for every scale. Firmware's flag is diagnostic.
 - Session zero is the stable reading with the empty bowl, kept in the app. Works the same on the simulator, the ESP32 and 0x181D scales that can't be tared remotely, and no risk of an in-flight pre-tare frame being read as zero. Firmware TARE stays for the scale screen.
 - Overload is checked on the gross weight. Tare hides the bowl but the load cell still carries it.
-- Calibration: serial menu first (phase 5), then CAL_ZERO + CAL_KNOWN_MASS over BLE for the in-app wizard (phase 7).
+- Calibration: serial menu now (phase 5), CAL_ZERO + CAL_KNOWN_MASS are already in the firmware for the in-app wizard (phase 7).
 - Weight frame (phase 4 protocol doc), 8 bytes little-endian: version, flags (stable, overload, uncalibrated, sensor fault), uint16 sequence, int32 milligrams. 10 Hz from the HX711's 10 SPS mode. No frame for 1 s or sequence going backwards = stale, weighing pauses.
 
 ## Firmware

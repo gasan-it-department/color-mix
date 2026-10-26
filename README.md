@@ -29,8 +29,8 @@ lib/
   core/       constants, database (drift), bluetooth (scale interface), utils, widgets
   features/   dashboard, color_studio, formulation, scale, weighing, saved_formulas, settings
   shared/     models + widgets used by more than one feature
-firmware/     esp32 scale (phase 5)
-docs/         decisions, protocol (phase 4)
+firmware/     esp32 scale firmware, PlatformIO
+docs/         decisions, ble protocol, hardware test sheet
 ```
 
 Shell: bottom bar under 600 px, icon rail up to 1100 px, labelled sidebar above that. Settings is in the app bar on phones and at the bottom of the rail/sidebar.
@@ -51,7 +51,7 @@ No doubles in the formula maths.
 - [x] 2 color studio: demo palette, custom picker, labelled demo recipes, nearest demo shade
 - [x] 3 formula calculator: 1-3 colors, exact weights, developer by weight, validation, save and edit
 - [x] 4 simulated weighing: simulator, bowl zero, live display, cumulative targets, overshoot, disconnects, sessions saved, `docs/protocol.md`
-- [ ] 5 esp32 firmware
+- [x] 5 esp32 firmware: HX711, calibration in NVS, BLE service, tare, serial menu. Builds and PC tests pass, not run on a board yet
 - [ ] 6 real bluetooth
 - [ ] 7 session history, settings, calibration ui
 - [ ] 8 end-to-end runs, hardware checks, docs

@@ -55,14 +55,21 @@ The app writes one opcode byte, then the payload if any. The scale answers by no
 
 | Opcode | Name | Payload | Notes |
 |---|---|---|---|
-| 0x01 | TARE | none | zero the device. The weighing screen doesn't use it, it keeps its own session zero |
+| 0x01 | TARE | none | zero the device. The weighing screen doesn't use it, it keeps its own session zero. Busy while the reading is moving |
 | 0x02 | GET_STATUS | none | refresh the info characteristic |
-| 0x10 | CAL_ZERO | none | phase 7, first calibration step with nothing on the platform |
-| 0x11 | CAL_KNOWN_MASS | int32 mg | phase 7, the reference weight now on the platform |
+| 0x10 | CAL_ZERO | none | first calibration step, nothing on the platform. Busy while moving |
+| 0x11 | CAL_KNOWN_MASS | int32 mg | second step, the reference weight now on the platform, at least 10 g. Fails without a CAL_ZERO since power-up |
 
-Result byte: 0 ok, 1 busy, 2 failed, 3 unknown opcode.
+Result byte: 0 ok, 1 busy, 2 failed, 3 unknown opcode. A wrong length for a known opcode is failed.
 
-Until phase 7, calibration goes through the serial menu.
+The two calibration steps average 2 s of samples, so their reply comes when that's done, not straight away. Frames keep coming meanwhile. If the reading moved during the average the reply is failed. The firmware has both now, the app's calibration screen is phase 7. Until then the serial menu does it.
+
+## Firmware behaviour worth knowing on the app side
+
+- A frame goes out as each HX711 sample arrives, about 10 a second, never closer than 80 ms
+- If the HX711 stops answering for 0.5 s, frames keep coming every 100 ms with the sensor fault flag and the last weight. The phase 6 adapter should drop those (so the weighing screen goes stale) and say the sensor isn't answering
+- Device tare isn't kept over a power cycle, calibration is
+- Advertising restarts by itself after a disconnect
 
 ## Test vectors
 
