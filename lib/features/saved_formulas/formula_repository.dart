@@ -1,6 +1,8 @@
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 
 import 'package:colormix_studio/core/database/app_database.dart';
+import 'package:colormix_studio/features/formulation/formula_seed.dart';
 import 'package:colormix_studio/shared/models/color_formula.dart';
 
 class FormulaRepository {
@@ -75,6 +77,47 @@ class FormulaRepository {
   Future<void> delete(String id) =>
       (_db.delete(_db.formulas)..where((f) => f.id.equals(id))).go();
 
+  /// a copy with new ids, dated now, named "X (copy)" or "X (copy 2)" if
+  /// that's taken. a demo stays a demo. null if the formula is gone
+  Future<ColorFormula?> duplicate(String id) async {
+    final f = await find(id);
+    if (f == null) return null;
+
+    final names =
+        await (_db.selectOnly(_db.formulas)..addColumns([_db.formulas.name]))
+            .map((r) => r.read(_db.formulas.name)!)
+            .get();
+
+    final now = clock.now();
+    final copy = ColorFormula(
+      id: newId(),
+      name: copyName(f.name, names.toSet()),
+      targetRgb: f.targetRgb,
+      presetId: f.presetId,
+      isDemo: f.isDemo,
+      ingredients: [
+        for (final i in f.ingredients)
+          FormulaIngredient(
+            id: newId(),
+            name: i.name,
+            percentHundredths: i.percentHundredths,
+            requiredDg: i.requiredDg,
+            displayRgb: i.displayRgb,
+          ),
+      ],
+      totalDyeDg: f.totalDyeDg,
+      developerRatio: f.developerRatio,
+      developerVolume: f.developerVolume,
+      developerDg: f.developerDg,
+      totalMixtureDg: f.totalMixtureDg,
+      notes: f.notes,
+      createdAt: now,
+      updatedAt: now,
+    );
+    await save(copy);
+    return copy;
+  }
+
   Future<List<ColorFormula>> _withIngredients(List<FormulaRow> rows) async {
     if (rows.isEmpty) return const [];
 
@@ -120,4 +163,17 @@ class FormulaRepository {
         ),
     ];
   }
+}
+
+final _copySuffix = RegExp(r' \(copy(?: (\d+))?\)$');
+
+/// "Rose Gold" -> "Rose Gold (copy)", then "(copy 2)", "(copy 3)"... copying
+/// a copy counts on from the same base name
+String copyName(String name, Set<String> taken) {
+  final base = name.replaceFirst(_copySuffix, '');
+  var candidate = '$base (copy)';
+  for (var n = 2; taken.contains(candidate); n++) {
+    candidate = '$base (copy $n)';
+  }
+  return candidate;
 }

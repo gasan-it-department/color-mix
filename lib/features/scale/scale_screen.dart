@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/bluetooth/ble_scale_device.dart';
 import 'package:colormix_studio/core/bluetooth/ble_transport.dart';
 import 'package:colormix_studio/core/bluetooth/scale_device.dart';
 import 'package:colormix_studio/core/bluetooth/scale_providers.dart';
+import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
 import 'package:colormix_studio/core/widgets/app_page.dart';
 import 'package:colormix_studio/core/widgets/connection_chip.dart';
@@ -150,6 +152,17 @@ class _ConnectedScale extends ConsumerWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
+                  // a scale that still needs it gets the stronger button
+                  if (ble != null && ble.supportsCalibration && connected)
+                    ble.calibrated
+                        ? OutlinedButton(
+                            onPressed: () => context.push(Routes.calibrate),
+                            child: const Text('Calibrate'),
+                          )
+                        : FilledButton.tonal(
+                            onPressed: () => context.push(Routes.calibrate),
+                            child: const Text('Calibrate'),
+                          ),
                   if (device.supportsTare)
                     OutlinedButton(
                       onPressed: connected

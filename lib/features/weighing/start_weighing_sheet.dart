@@ -50,8 +50,17 @@ class _StartSheetState extends ConsumerState<_StartSheet> {
     final device = scale.device;
     // a standard 0x181D scale sends the odd reading, not a live weight
     final cantGuide = device is BleScaleDevice && device.experimental;
+    // an uncalibrated esp32 reads with a rough default factor
+    final uncalibrated =
+        device is BleScaleDevice &&
+        device.supportsCalibration &&
+        scale.isConnected &&
+        !device.calibrated;
     final ready =
-        scale.isConnected && !cantGuide && (ratio == null || _ratioChecked);
+        scale.isConnected &&
+        !cantGuide &&
+        !uncalibrated &&
+        (ratio == null || _ratioChecked);
     final showLast =
         settings.lastScaleId != null &&
         !(device is BleScaleDevice && device.deviceId == settings.lastScaleId);
@@ -134,6 +143,18 @@ class _StartSheetState extends ConsumerState<_StartSheet> {
                 Text(device.problem!, style: muted),
               ],
             ],
+            if (uncalibrated) ...[
+              const SizedBox(height: 10),
+              FilledButton.tonalIcon(
+                onPressed: () {
+                  final router = GoRouter.of(context);
+                  Navigator.pop(context);
+                  router.push(Routes.calibrate);
+                },
+                icon: const Icon(Icons.tune, size: 18),
+                label: const Text('Calibrate'),
+              ),
+            ],
             if (!scale.isConnected) ...[
               const SizedBox(height: 10),
               if (showLast) ...[
@@ -184,6 +205,9 @@ class _StartSheetState extends ConsumerState<_StartSheet> {
                     ? 'This scale only sends a reading now and then, it '
                           'can\'t guide pouring. Use the ColorMix scale or '
                           'the simulator.'
+                    : uncalibrated
+                    ? 'The scale isn\'t calibrated yet, its readings are '
+                          'only rough. Calibrate it first, it takes a minute.'
                     : 'Tick the developer check first.',
                 textAlign: TextAlign.center,
                 style: muted,

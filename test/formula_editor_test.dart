@@ -67,6 +67,43 @@ void main() {
     await unmountApp(tester);
   });
 
+  testWidgets('a new formula keeps its id after weighing and saving again', (
+    tester,
+  ) async {
+    // the simulator streams readings, so fixed pumps from here on
+    Future<void> wait([int ms = 400]) async {
+      for (var t = 0; t < ms; t += 100) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+
+    Future<void> tap(Finder f) async {
+      await tester.ensureVisible(f.first);
+      await wait(200);
+      await tester.tap(f.first);
+      await wait();
+    }
+
+    await openFromShade(tester, 'Rose Gold');
+    await tapText(tester, 'Save formula');
+    expect(find.text('Not weighed yet.'), findsOneWidget);
+
+    await tap(find.text('Start weighing'));
+    await tap(find.text('Use simulated scale'));
+    await tap(find.byType(Checkbox));
+    await tap(find.widgetWithText(FilledButton, 'Start weighing'));
+    await tap(find.byTooltip('Stop weighing'));
+    await tap(find.widgetWithText(FilledButton, 'Stop'));
+    await wait(800);
+
+    // coming back rebuilds the route, the editor must still be this formula
+    expect(find.textContaining('Cancelled · 0 of 4 steps'), findsOneWidget);
+    await tap(find.text('Save formula'));
+    expect(await saved(tester), hasLength(1));
+
+    await unmountApp(tester);
+  });
+
   testWidgets('changing the dye amount reworks every weight', (tester) async {
     await openFromShade(tester, 'Rose Gold');
 

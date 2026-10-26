@@ -62,7 +62,7 @@ The app writes one opcode byte, then the payload if any. The scale answers by no
 
 Result byte: 0 ok, 1 busy, 2 failed, 3 unknown opcode. A wrong length for a known opcode is failed.
 
-The two calibration steps average 2 s of samples, so their reply comes when that's done, not straight away. Frames keep coming meanwhile. If the reading moved during the average the reply is failed. The firmware has both now, the app's calibration screen is phase 7. Until then the serial menu does it.
+The two calibration steps average 2 s of samples, so their reply comes when that's done, not straight away. Frames keep coming meanwhile. If the reading moved during the average the reply is failed. The app's calibration screen sends both and waits up to 8 s for each reply. After CAL_KNOWN_MASS works the info characteristic says `cal=1`.
 
 ## Firmware behaviour worth knowing on the app side
 

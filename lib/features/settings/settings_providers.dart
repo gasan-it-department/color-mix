@@ -37,6 +37,25 @@ class SettingsNotifier extends Notifier<AppSettings> {
   Future<void> setDefaultDyeDg(int dg) =>
       _update(state.copyWith(defaultDyeDg: dg));
 
+  Future<void> setStability({int? thresholdMg, int? dwellMs}) => _update(
+    state.copyWith(
+      stabilityThresholdMg: thresholdMg,
+      stabilityDwellMs: dwellMs,
+    ),
+  );
+
+  /// tolerance and steadiness back to how they shipped
+  Future<void> resetWeighing() {
+    const d = AppSettings();
+    return _update(
+      state.copyWith(
+        toleranceDg: d.toleranceDg,
+        stabilityThresholdMg: d.stabilityThresholdMg,
+        stabilityDwellMs: d.stabilityDwellMs,
+      ),
+    );
+  }
+
   Future<void> setLastScale(String? id, String? name) =>
       _update(state.withLastScale(id, name));
 

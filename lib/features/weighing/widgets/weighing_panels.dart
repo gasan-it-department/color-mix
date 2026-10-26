@@ -372,7 +372,7 @@ Future<void> _showReview(BuildContext context, WeighingState s) {
         children: [
           Text('So far', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
-          StepsTable(state: s),
+          DeviationTable.ofState(s),
           const SizedBox(height: 12),
           Text(
             'Live: ${s.step.name} ${formatMilligrams(s.addedMg ?? 0)} of '
@@ -417,7 +417,7 @@ class ReviewPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          StepsTable(state: s),
+          DeviationTable.ofState(s),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 10),
             child: Divider(),
@@ -594,7 +594,7 @@ class DonePanel extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 16),
-          StepsTable(state: s),
+          DeviationTable.ofState(s),
           const SizedBox(height: 18),
           FilledButton(onPressed: onDone, child: const Text('Done')),
         ],

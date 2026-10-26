@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -115,5 +116,40 @@ void main() {
 
     final one = await repo.watchAll(limit: 1).first;
     expect(one.map((f) => f.id), ['new']);
+  });
+
+  test('duplicate copies everything under new ids, dated now', () async {
+    await repo.save(roseGold());
+
+    final copy = await withClock(
+      Clock.fixed(DateTime(2026, 10, 27, 8)),
+      () => repo.duplicate('f1'),
+    );
+
+    expect(copy, isNotNull);
+    expect(copy!.id, isNot('f1'));
+    expect(copy.name, 'Rose Gold Demo (copy)');
+    expect(copy.isDemo, isTrue);
+    expect(copy.createdAt, DateTime(2026, 10, 27, 8));
+    final saved = (await repo.find(copy.id))!;
+    expect(saved.ingredients.map((i) => i.requiredDg), [300, 180, 120]);
+    expect(
+      saved.ingredients.map((i) => i.id),
+      everyElement(isNot(startsWith('f1'))),
+    );
+    expect(saved.developerRatio, const DeveloperRatio(100));
+    // the original is untouched
+    expect((await repo.find('f1'))!.ingredients, hasLength(3));
+    expect(await repo.duplicate('gone'), isNull);
+  });
+
+  test('copy names count up and copying a copy keeps the base', () {
+    expect(copyName('Rose', {}), 'Rose (copy)');
+    expect(copyName('Rose', {'Rose (copy)'}), 'Rose (copy 2)');
+    expect(
+      copyName('Rose (copy)', {'Rose (copy)', 'Rose (copy 2)'}),
+      'Rose (copy 3)',
+    );
+    expect(copyName('Rose (copy 2)', {'Rose (copy 2)'}), 'Rose (copy)');
   });
 }

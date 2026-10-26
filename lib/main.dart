@@ -6,6 +6,7 @@ import 'package:colormix_studio/core/database/app_database.dart';
 import 'package:colormix_studio/core/database/database_provider.dart';
 import 'package:colormix_studio/features/settings/settings_providers.dart';
 import 'package:colormix_studio/features/settings/settings_repository.dart';
+import 'package:colormix_studio/features/weighing/session_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,8 @@ Future<void> main() async {
   // load settings before the first frame so the theme doesn't flash
   final db = AppDatabase();
   final settings = await SettingsRepository(db).load();
+  // a session still "in progress" now was cut off by the app closing
+  await SessionRepository(db).markInterrupted();
 
   runApp(
     ProviderScope(

@@ -9,10 +9,13 @@ import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
 import 'package:colormix_studio/shared/widgets/label_tag.dart';
 
 class FormulaTile extends StatelessWidget {
-  const FormulaTile({super.key, required this.formula, this.onTap});
+  const FormulaTile({super.key, required this.formula, this.onTap, this.menu});
 
   final ColorFormula formula;
   final VoidCallback? onTap;
+
+  /// goes after the date, the saved list puts its ⋮ menu here
+  final Widget? menu;
 
   static final _date = DateFormat.MMMd();
 
@@ -23,6 +26,11 @@ class FormulaTile extends StatelessWidget {
     final developer = f.developerRatio == null
         ? 'no developer'
         : '${f.developerRatio!.label} developer';
+    final date = _date.format(f.updatedAt);
+    // on a phone with the menu there's no room left for the date on the
+    // right, it joins the subtitle and the name gets the width
+    final dateBelow =
+        menu != null && MediaQuery.sizeOf(context).width < Breakpoints.rail;
 
     return ListTile(
       // opens the editor unless the caller wants something else
@@ -32,9 +40,10 @@ class FormulaTile extends StatelessWidget {
       title: Row(
         children: [
           Flexible(
+            // two lines so "X" and "X (copy)" don't both end in "X…"
             child: Text(
               f.name,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w600,
@@ -48,15 +57,26 @@ class FormulaTile extends StatelessWidget {
         ],
       ),
       subtitle: Text(
-        '${formatDecigrams(f.totalDyeDg)} dye · $developer',
+        [
+          '${formatDecigrams(f.totalDyeDg)} dye',
+          developer,
+          if (dateBelow) date,
+        ].join(' · '),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: Text(
-        _date.format(f.updatedAt),
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!dateBelow)
+            Text(
+              date,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ?menu,
+        ],
       ),
     );
   }

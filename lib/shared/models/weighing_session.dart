@@ -50,6 +50,7 @@ class WeighingSession {
     this.formulaId,
     this.currentStepIndex = 0,
     this.measuredTotalMg,
+    this.toleranceMg,
     this.completedAt,
   });
 
@@ -64,7 +65,21 @@ class WeighingSession {
   final int currentStepIndex;
   final int plannedTotalDg;
   final int? measuredTotalMg;
+
+  /// null for sessions saved before it was recorded
+  final int? toleranceMg;
   final SessionStatus status;
   final DateTime startedAt;
   final DateTime? completedAt;
+
+  int get doneSteps => steps.where((s) => s.isDone).length;
+
+  /// the final total once finished, otherwise the last confirmed reading
+  int? get weighedMg {
+    if (measuredTotalMg != null) return measuredTotalMg;
+    for (final s in steps.reversed) {
+      if (s.isDone) return s.actualCumulativeMg;
+    }
+    return null;
+  }
 }

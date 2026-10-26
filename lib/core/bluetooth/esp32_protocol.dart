@@ -24,6 +24,9 @@ abstract final class ColorMixScaleUuids {
 const protocolVersion = 1;
 const weightFrameLength = 8;
 
+/// CAL_KNOWN_MASS fails below this
+const minCalibrationMassMg = 10000;
+
 abstract final class FrameFlags {
   static const stable = 0x01;
   static const overload = 0x02;

@@ -19,6 +19,8 @@ Reference weights used and how their mass was known: ______________________
 - [ ] `z` with the platform empty: `zero saved`
 - [ ] `k <grams>` with the reference on: counts per gram = ________
 - [ ] power off and on: `s` still shows the same factor (it's in flash)
+- [ ] `x` to clear it, then calibrate again from the app (Scale tab, Calibrate): both steps go through, the scale tab says calibrated, step 3 reads the reference within tolerance
+- [ ] in the app, Zero the scale with something moving on the platform: it says the reading isn't steady and stays on step 1
 
 ## 3. Accuracy
 

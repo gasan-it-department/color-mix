@@ -29,6 +29,9 @@ int? parsePercentHundredths(String text) => _parseFixed(text, 2);
 /// '1.5' -> 150
 int? parseRatioHundredths(String text) => _parseFixed(text, 2);
 
+/// grams typed in, milligrams out: '200' -> 200000, '200.05' -> 200050
+int? parseGramsToMg(String text) => _parseFixed(text, 3);
+
 int? _parseFixed(String text, int decimals) {
   final t = text.trim().replaceAll(',', '.');
   final m = RegExp(r'^(\d{1,6})(?:\.(\d*))?$').firstMatch(t);

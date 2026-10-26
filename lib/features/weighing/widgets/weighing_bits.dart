@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
 import 'package:colormix_studio/features/weighing/weighing_state.dart';
+import 'package:colormix_studio/shared/models/weighing_session.dart';
 import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
 import 'package:colormix_studio/shared/widgets/label_tag.dart';
 
@@ -147,12 +148,61 @@ class StatusBanner extends StatelessWidget {
   }
 }
 
-/// target vs what went in, per step. a table when there's room, two lines
-/// per step on phones
-class StepsTable extends StatelessWidget {
-  const StepsTable({super.key, required this.state});
+/// one line of the target vs added table. [addedMg] null = not weighed
+typedef DeviationRow = ({
+  String name,
+  int rgb,
+  int targetMg,
+  int? addedMg,
+  bool movedOn,
+});
 
-  final WeighingState state;
+/// target vs what went in, per step. a table when there's room, two lines
+/// per step on phones. used live at the end of weighing and in history
+class DeviationTable extends StatelessWidget {
+  const DeviationTable({
+    super.key,
+    required this.rows,
+    required this.toleranceMg,
+  });
+
+  DeviationTable.ofState(WeighingState s, {Key? key})
+    : this(
+        key: key,
+        toleranceMg: s.toleranceMg,
+        rows: [
+          for (final (i, step) in s.steps.indexed)
+            (
+              name: step.name,
+              rgb: step.rgb,
+              targetMg: step.targetAddedMg,
+              addedMg: s.records[i]?.addedMg,
+              movedOn: s.records[i]?.manual ?? false,
+            ),
+        ],
+      );
+
+  DeviationTable.ofSession(
+    WeighingSession s, {
+    Key? key,
+    required int toleranceMg,
+  }) : this(
+         key: key,
+         toleranceMg: toleranceMg,
+         rows: [
+           for (final step in s.steps)
+             (
+               name: step.ingredientName,
+               rgb: step.displayRgb,
+               targetMg: step.targetAddedDg * 100,
+               addedMg: step.actualAddedMg,
+               movedOn: step.confirmedStable == false,
+             ),
+         ],
+       );
+
+  final List<DeviationRow> rows;
+  final int toleranceMg;
 
   @override
   Widget build(BuildContext context) {
@@ -162,32 +212,30 @@ class StepsTable extends StatelessWidget {
     );
   }
 
-  ({StepPlan step, StepRecord? record, int? diff, bool off}) _row(int i) {
-    final step = state.steps[i];
-    final r = state.records[i];
-    final diff = r == null ? null : r.addedMg - step.targetAddedMg;
+  ({DeviationRow row, int? diff, bool off}) _row(int i) {
+    final row = rows[i];
+    final diff = row.addedMg == null ? null : row.addedMg! - row.targetMg;
     return (
-      step: step,
-      record: r,
+      row: row,
       diff: diff,
-      off: diff != null && diff.abs() > state.toleranceMg,
+      off: diff != null && diff.abs() > toleranceMg,
     );
   }
 
-  Widget _name(BuildContext context, StepPlan step, StepRecord? r) {
+  Widget _name(BuildContext context, DeviationRow row) {
     return Row(
       children: [
-        ColorSwatchDot(rgb: step.rgb, size: 18),
+        ColorSwatchDot(rgb: row.rgb, size: 18),
         const SizedBox(width: 10),
         Flexible(
           child: Text(
-            step.name,
+            row.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
-        if (r?.manual ?? false) ...[
+        if (row.movedOn) ...[
           const SizedBox(width: 6),
           const LabelTag('Moved on', tone: TagTone.warning),
         ],
@@ -216,7 +264,7 @@ class StepsTable extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 4),
-        for (var i = 0; i < state.steps.length; i++)
+        for (var i = 0; i < rows.length; i++)
           Builder(
             builder: (context) {
               final x = _row(i);
@@ -224,12 +272,12 @@ class StepsTable extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Row(
                   children: [
-                    Expanded(child: _name(context, x.step, x.record)),
-                    _Cell(formatMilligrams(x.step.targetAddedMg)),
+                    Expanded(child: _name(context, x.row)),
+                    _Cell(formatMilligrams(x.row.targetMg)),
                     _Cell(
-                      x.record == null
+                      x.row.addedMg == null
                           ? '—'
-                          : formatMilligrams(x.record!.addedMg),
+                          : formatMilligrams(x.row.addedMg!),
                       bold: true,
                     ),
                     _Cell(
@@ -255,7 +303,7 @@ class StepsTable extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (var i = 0; i < state.steps.length; i++)
+        for (var i = 0; i < rows.length; i++)
           Builder(
             builder: (context) {
               final x = _row(i);
@@ -264,7 +312,7 @@ class StepsTable extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _name(context, x.step, x.record),
+                    _name(context, x.row),
                     Padding(
                       padding: const EdgeInsets.only(left: 28, top: 2),
                       child: Text.rich(
@@ -272,12 +320,12 @@ class StepsTable extends StatelessWidget {
                           children: [
                             TextSpan(
                               text:
-                                  'Target ${formatMilligrams(x.step.targetAddedMg)} · added ',
+                                  'Target ${formatMilligrams(x.row.targetMg)} · added ',
                             ),
                             TextSpan(
-                              text: x.record == null
+                              text: x.row.addedMg == null
                                   ? '—'
-                                  : formatMilligrams(x.record!.addedMg),
+                                  : formatMilligrams(x.row.addedMg!),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                               ),

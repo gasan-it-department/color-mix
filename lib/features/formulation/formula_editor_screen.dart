@@ -16,8 +16,10 @@ import 'package:colormix_studio/features/formulation/formula_seed.dart';
 import 'package:colormix_studio/features/formulation/widgets/developer_section.dart';
 import 'package:colormix_studio/features/formulation/widgets/part_row.dart';
 import 'package:colormix_studio/features/formulation/widgets/result_card.dart';
+import 'package:colormix_studio/features/history/session_tile.dart';
 import 'package:colormix_studio/features/saved_formulas/formula_providers.dart';
 import 'package:colormix_studio/features/settings/settings_providers.dart';
+import 'package:colormix_studio/features/weighing/session_repository.dart';
 import 'package:colormix_studio/features/weighing/start_weighing_sheet.dart';
 import 'package:colormix_studio/shared/models/color_formula.dart';
 import 'package:colormix_studio/shared/widgets/label_tag.dart';
@@ -128,6 +130,11 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
   final _customRatio = TextEditingController();
   final List<_Part> _parts = [];
 
+  /// the seed this editor opened with. a new formula's seed gets a fresh id
+  /// every time the route rebuilds (coming back from weighing does that), so
+  /// widget.seed can't be trusted after the first build
+  late final FormulaSeed _seed;
+
   /// what reset goes back to: the starting point, then the last save
   late FormulaSeed _baseline;
 
@@ -141,9 +148,10 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
   @override
   void initState() {
     super.initState();
-    _baseline = widget.seed;
-    _saved = widget.seed.isSaved;
-    _load(widget.seed);
+    _seed = widget.seed;
+    _baseline = _seed;
+    _saved = _seed.isSaved;
+    _load(_seed);
   }
 
   @override
@@ -280,7 +288,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
     }
 
     final now = DateTime.now();
-    final s = widget.seed;
+    final s = _seed;
     final formula = ColorFormula(
       id: s.id,
       name: _name.text.trim(),
@@ -323,6 +331,8 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
         ..showSnackBar(
           SnackBar(
             content: const Text('Formula saved'),
+            // an action makes it stay until tapped, this one's only a shortcut
+            persist: false,
             action: SnackBarAction(
               label: 'View all',
               onPressed: () => GoRouter.of(context).go(Routes.formulas),
@@ -349,9 +359,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
     if (_dirty || !_saved) {
       if (!await _save()) return;
     }
-    final formula = await ref
-        .read(formulaRepositoryProvider)
-        .find(widget.seed.id);
+    final formula = await ref.read(formulaRepositoryProvider).find(_seed.id);
     if (formula == null || !mounted) return;
     await showStartWeighingSheet(context, formula);
   }
@@ -387,10 +395,14 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
       onStartWeighing: r.canSave ? _startWeighing : null,
       saving: _saving,
     );
+    // nothing to show before the first save
+    final history = _saved
+        ? _HistoryCard(formulaId: _seed.id)
+        : const SizedBox.shrink();
 
     final inputs = [
       _HeaderCard(
-        seed: widget.seed,
+        seed: _seed,
         nameController: _name,
         nameError: r.errorFor(IssueField.name),
         onChanged: _changed,
@@ -486,7 +498,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
                         width: 380,
                         child: ListView(
                           padding: const EdgeInsets.fromLTRB(12, 8, 24, 32),
-                          children: [result],
+                          children: [result, history],
                         ),
                       ),
                     ],
@@ -495,7 +507,12 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
               )
             : ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                children: [...inputs, const SizedBox(height: 12), result],
+                children: [
+                  ...inputs,
+                  const SizedBox(height: 12),
+                  result,
+                  history,
+                ],
               ),
         bottomNavigationBar: wide
             ? null
@@ -762,6 +779,63 @@ class _PercentTotal extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// past weighings of this formula, the newest few
+class _HistoryCard extends ConsumerStatefulWidget {
+  const _HistoryCard({required this.formulaId});
+
+  final String formulaId;
+
+  @override
+  ConsumerState<_HistoryCard> createState() => _HistoryCardState();
+}
+
+class _HistoryCardState extends ConsumerState<_HistoryCard> {
+  static const _few = 3;
+  bool _all = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final sessions = ref.watch(sessionsProvider(widget.formulaId)).value;
+    if (sessions == null) return const SizedBox.shrink();
+    final shown = _all ? sessions : sessions.take(_few).toList();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: SectionCard(
+        title: 'Weighing history',
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: sessions.isEmpty
+            ? Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Not weighed yet.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final s in shown)
+                    SessionTile(session: s, showFormula: false),
+                  if (sessions.length > _few)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () => setState(() => _all = !_all),
+                        child: Text(
+                          _all ? 'Show fewer' : 'Show all ${sessions.length}',
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+      ),
     );
   }
 }

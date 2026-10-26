@@ -53,6 +53,9 @@ class WeighingSessions extends Table {
   IntColumn get currentStepIndex => integer().withDefault(const Constant(0))();
   IntColumn get plannedTotalDg => integer()();
   IntColumn get measuredTotalMg => integer().nullable()();
+
+  /// what "on target" meant for this session. null on v1 rows
+  IntColumn get toleranceMg => integer().nullable()();
   TextColumn get status => textEnum<SessionStatus>()();
   DateTimeColumn get startedAt => dateTime()();
   DateTimeColumn get finishedAt => dateTime().nullable()();

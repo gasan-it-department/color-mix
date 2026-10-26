@@ -41,6 +41,7 @@ class BleScaleDevice extends ChangeNotifier implements ScaleDevice {
     ScaleAdapterType guess = ScaleAdapterType.unknown,
     this.connectTimeout = const Duration(seconds: 10),
     this.commandTimeout = const Duration(seconds: 4),
+    this.calibrationTimeout = const Duration(seconds: 8),
     this.reconnectDelays = const [
       Duration(seconds: 2),
       Duration(seconds: 4),
@@ -52,6 +53,9 @@ class BleScaleDevice extends ChangeNotifier implements ScaleDevice {
   final String deviceId;
   final Duration connectTimeout;
   final Duration commandTimeout;
+
+  /// calibration replies come after the scale's 2 s average
+  final Duration calibrationTimeout;
   final List<Duration> reconnectDelays;
 
   final String name;
@@ -115,6 +119,9 @@ class BleScaleDevice extends ChangeNotifier implements ScaleDevice {
 
   bool get calibrated => _deviceInfo['cal'] == '1';
 
+  /// only our esp32 takes calibration commands
+  bool get supportsCalibration => _adapter == ScaleAdapterType.esp32Custom;
+
   bool get sensorFault => _sensorFault;
 
   /// frames that didn't decode, for diagnostics
@@ -164,6 +171,105 @@ class BleScaleDevice extends ChangeNotifier implements ScaleDevice {
       throw const ScaleCommandException('The scale couldn\'t tare. Try again.');
     }
   }
+
+  // ── calibration, esp32 only ──
+
+  /// step 1, platform empty. the scale averages 2 s before it answers
+  Future<void> calibrateZero() async {
+    _checkCalibratable();
+    final result = await _command(
+      ControlOp.calZero,
+      timeout: calibrationTimeout,
+    );
+    switch (result) {
+      case ControlResult.ok:
+        return;
+      case ControlResult.busy:
+        throw const ScaleCommandException(
+          'The reading isn\'t steady. Keep the platform empty and still, '
+          'then try again.',
+        );
+      case ControlResult.failed:
+        throw const ScaleCommandException(
+          'The reading moved while the scale was measuring. Keep it still '
+          'and try again.',
+        );
+      default:
+        throw const ScaleCommandException(_oldFirmware);
+    }
+  }
+
+  /// step 2, the reference weight is on. [mg] is its real mass
+  Future<void> calibrateKnownMass(int mg) async {
+    _checkCalibratable();
+    if (mg < minCalibrationMassMg) {
+      throw const ScaleCommandException(
+        'Use a reference weight of at least 10 g.',
+      );
+    }
+    final result = await _command(
+      ControlOp.calKnownMass,
+      payload: mg,
+      timeout: calibrationTimeout,
+    );
+    switch (result) {
+      case ControlResult.ok:
+        await refreshInfo();
+      case ControlResult.busy:
+        throw const ScaleCommandException(
+          'The reading isn\'t steady yet. Let the weight settle, then try '
+          'again.',
+        );
+      case ControlResult.failed:
+        // not zeroed since power-up, or barely any change from the zero
+        throw const ScaleCommandException(
+          'The scale couldn\'t use that. Check the weight sits in the '
+          'middle of the platform and its mass is right. If it still '
+          'fails, start again from step 1.',
+        );
+      default:
+        throw const ScaleCommandException(_oldFirmware);
+    }
+  }
+
+  /// reads the info text again, it says cal=1 once calibrated
+  Future<void> refreshInfo() async {
+    if (!isConnected || !supportsCalibration) return;
+    try {
+      await _command(ControlOp.getStatus);
+      final text = utf8.decode(
+        await transport.read(
+          deviceId,
+          ColorMixScaleUuids.service,
+          ColorMixScaleUuids.info,
+        ),
+        allowMalformed: true,
+      );
+      _deviceInfo = parseInfo(text);
+    } catch (_) {
+      // keep what we had, the next connect reads it again
+      return;
+    }
+    if (!_sensorFault) _problem = calibrated ? null : _uncalibratedNote;
+    notifyListeners();
+  }
+
+  void _checkCalibratable() {
+    if (!supportsCalibration) {
+      throw const ScaleCommandException(
+        'Only the ColorMix scale can be calibrated from the app.',
+      );
+    }
+    if (!isConnected) {
+      throw const ScaleCommandException('The scale isn\'t connected.');
+    }
+  }
+
+  static const _uncalibratedNote =
+      'The scale isn\'t calibrated yet, readings are only rough.';
+  static const _oldFirmware =
+      'The scale\'s firmware doesn\'t know this command. Flash the ColorMix '
+      'firmware again.';
 
   @override
   Future<void> close() async {
@@ -270,9 +376,7 @@ class BleScaleDevice extends ChangeNotifier implements ScaleDevice {
     _reconnecting = false;
     _set(
       ScaleConnectionState.connectedSupported,
-      problem: calibrated
-          ? null
-          : 'The scale isn\'t calibrated yet, readings are only rough.',
+      problem: calibrated ? null : _uncalibratedNote,
     );
   }
 
@@ -395,11 +499,11 @@ class BleScaleDevice extends ChangeNotifier implements ScaleDevice {
   }
 
   /// writes [op], waits for the scale's reply on the control characteristic
-  Future<int> _command(int op, [int? payload]) async {
+  Future<int> _command(int op, {int? payload, Duration? timeout}) async {
     final reply = _replies.stream
         .where((v) => v.length >= 2 && v[0] == (op | ControlOp.replyBit))
         .first
-        .timeout(commandTimeout);
+        .timeout(timeout ?? commandTimeout);
     try {
       await transport.write(
         deviceId,

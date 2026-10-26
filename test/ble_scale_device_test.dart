@@ -38,6 +38,7 @@ void main() {
       name: p.name ?? 'Unnamed device',
       guess: guessAdapter(p.scanResult),
       commandTimeout: const Duration(milliseconds: 60),
+      calibrationTimeout: const Duration(milliseconds: 60),
       reconnectDelays: const [
         Duration(milliseconds: 10),
         Duration(milliseconds: 10),
@@ -195,6 +196,83 @@ void main() {
           ),
         ),
       );
+    });
+  });
+
+  group('calibration', () {
+    Matcher fails(String text) => throwsA(
+      isA<ScaleCommandException>().having(
+        (e) => e.message,
+        'message',
+        contains(text),
+      ),
+    );
+
+    test('zero then known mass, the info flips to calibrated', () async {
+      final p = fakeEsp32(info: 'fw=0.1.0;proto=1;cap_g=1000;cal=0');
+      final scale = deviceFor(p);
+      await scale.connect();
+      expect(scale.calibrated, isFalse);
+      expect(scale.problem, contains('isn\'t calibrated'));
+      var notified = 0;
+      scale.addListener(() => notified++);
+
+      await scale.calibrateZero();
+      expect(radio.writes.last, [ControlOp.calZero]);
+
+      await scale.calibrateKnownMass(200000);
+      // opcode then int32 mg, little endian
+      expect(
+        radio.writes.firstWhere((w) => w[0] == ControlOp.calKnownMass),
+        encodeControl(ControlOp.calKnownMass, 200000),
+      );
+      expect(radio.writes.last, [ControlOp.getStatus]);
+      expect(scale.calibrated, isTrue);
+      expect(scale.problem, isNull);
+      expect(notified, greaterThan(0));
+    });
+
+    test('busy, failed and silent scales say what to do', () async {
+      final p = fakeEsp32();
+      final scale = deviceFor(p);
+      await scale.connect();
+
+      p.calZeroResult = ControlResult.busy;
+      await expectLater(scale.calibrateZero(), fails('empty and still'));
+      p.calZeroResult = ControlResult.failed;
+      await expectLater(scale.calibrateZero(), fails('moved while'));
+      p.calZeroResult = ControlResult.unknownOp;
+      await expectLater(scale.calibrateZero(), fails('Flash the ColorMix'));
+
+      p.calMassResult = ControlResult.busy;
+      await expectLater(scale.calibrateKnownMass(200000), fails('settle'));
+      p.calMassResult = ControlResult.failed;
+      await expectLater(
+        scale.calibrateKnownMass(200000),
+        fails('start again from step 1'),
+      );
+
+      p.answersControl = false;
+      await expectLater(scale.calibrateZero(), fails('didn\'t answer'));
+    });
+
+    test('too light a reference never reaches the scale', () async {
+      final scale = deviceFor(fakeEsp32());
+      await scale.connect();
+      final before = radio.writes.length;
+
+      await expectLater(scale.calibrateKnownMass(9999), fails('at least 10 g'));
+      expect(radio.writes, hasLength(before));
+    });
+
+    test('a standard scale or a dropped one can\'t be calibrated', () async {
+      final standard = deviceFor(fakeWeightScale());
+      await standard.connect();
+      expect(standard.supportsCalibration, isFalse);
+      await expectLater(standard.calibrateZero(), fails('Only the ColorMix'));
+
+      final esp = deviceFor(fakeEsp32());
+      await expectLater(esp.calibrateZero(), fails('isn\'t connected'));
     });
   });
 

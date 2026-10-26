@@ -1363,6 +1363,17 @@ class $WeighingSessionsTable extends WeighingSessions
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _toleranceMgMeta = const VerificationMeta(
+    'toleranceMg',
+  );
+  @override
+  late final GeneratedColumn<int> toleranceMg = GeneratedColumn<int>(
+    'tolerance_mg',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<SessionStatus, String> status =
       GeneratedColumn<String>(
@@ -1404,6 +1415,7 @@ class $WeighingSessionsTable extends WeighingSessions
     currentStepIndex,
     plannedTotalDg,
     measuredTotalMg,
+    toleranceMg,
     status,
     startedAt,
     finishedAt,
@@ -1487,6 +1499,15 @@ class $WeighingSessionsTable extends WeighingSessions
         ),
       );
     }
+    if (data.containsKey('tolerance_mg')) {
+      context.handle(
+        _toleranceMgMeta,
+        toleranceMg.isAcceptableOrUnknown(
+          data['tolerance_mg']!,
+          _toleranceMgMeta,
+        ),
+      );
+    }
     if (data.containsKey('started_at')) {
       context.handle(
         _startedAtMeta,
@@ -1542,6 +1563,10 @@ class $WeighingSessionsTable extends WeighingSessions
         DriftSqlType.int,
         data['${effectivePrefix}measured_total_mg'],
       ),
+      toleranceMg: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tolerance_mg'],
+      ),
       status: $WeighingSessionsTable.$converterstatus.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
@@ -1578,6 +1603,9 @@ class WeighingSessionRow extends DataClass
   final int currentStepIndex;
   final int plannedTotalDg;
   final int? measuredTotalMg;
+
+  /// what "on target" meant for this session. null on v1 rows
+  final int? toleranceMg;
   final SessionStatus status;
   final DateTime startedAt;
   final DateTime? finishedAt;
@@ -1590,6 +1618,7 @@ class WeighingSessionRow extends DataClass
     required this.currentStepIndex,
     required this.plannedTotalDg,
     this.measuredTotalMg,
+    this.toleranceMg,
     required this.status,
     required this.startedAt,
     this.finishedAt,
@@ -1608,6 +1637,9 @@ class WeighingSessionRow extends DataClass
     map['planned_total_dg'] = Variable<int>(plannedTotalDg);
     if (!nullToAbsent || measuredTotalMg != null) {
       map['measured_total_mg'] = Variable<int>(measuredTotalMg);
+    }
+    if (!nullToAbsent || toleranceMg != null) {
+      map['tolerance_mg'] = Variable<int>(toleranceMg);
     }
     {
       map['status'] = Variable<String>(
@@ -1635,6 +1667,9 @@ class WeighingSessionRow extends DataClass
       measuredTotalMg: measuredTotalMg == null && nullToAbsent
           ? const Value.absent()
           : Value(measuredTotalMg),
+      toleranceMg: toleranceMg == null && nullToAbsent
+          ? const Value.absent()
+          : Value(toleranceMg),
       status: Value(status),
       startedAt: Value(startedAt),
       finishedAt: finishedAt == null && nullToAbsent
@@ -1657,6 +1692,7 @@ class WeighingSessionRow extends DataClass
       currentStepIndex: serializer.fromJson<int>(json['currentStepIndex']),
       plannedTotalDg: serializer.fromJson<int>(json['plannedTotalDg']),
       measuredTotalMg: serializer.fromJson<int?>(json['measuredTotalMg']),
+      toleranceMg: serializer.fromJson<int?>(json['toleranceMg']),
       status: $WeighingSessionsTable.$converterstatus.fromJson(
         serializer.fromJson<String>(json['status']),
       ),
@@ -1676,6 +1712,7 @@ class WeighingSessionRow extends DataClass
       'currentStepIndex': serializer.toJson<int>(currentStepIndex),
       'plannedTotalDg': serializer.toJson<int>(plannedTotalDg),
       'measuredTotalMg': serializer.toJson<int?>(measuredTotalMg),
+      'toleranceMg': serializer.toJson<int?>(toleranceMg),
       'status': serializer.toJson<String>(
         $WeighingSessionsTable.$converterstatus.toJson(status),
       ),
@@ -1693,6 +1730,7 @@ class WeighingSessionRow extends DataClass
     int? currentStepIndex,
     int? plannedTotalDg,
     Value<int?> measuredTotalMg = const Value.absent(),
+    Value<int?> toleranceMg = const Value.absent(),
     SessionStatus? status,
     DateTime? startedAt,
     Value<DateTime?> finishedAt = const Value.absent(),
@@ -1707,6 +1745,7 @@ class WeighingSessionRow extends DataClass
     measuredTotalMg: measuredTotalMg.present
         ? measuredTotalMg.value
         : this.measuredTotalMg,
+    toleranceMg: toleranceMg.present ? toleranceMg.value : this.toleranceMg,
     status: status ?? this.status,
     startedAt: startedAt ?? this.startedAt,
     finishedAt: finishedAt.present ? finishedAt.value : this.finishedAt,
@@ -1729,6 +1768,9 @@ class WeighingSessionRow extends DataClass
       measuredTotalMg: data.measuredTotalMg.present
           ? data.measuredTotalMg.value
           : this.measuredTotalMg,
+      toleranceMg: data.toleranceMg.present
+          ? data.toleranceMg.value
+          : this.toleranceMg,
       status: data.status.present ? data.status.value : this.status,
       startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
       finishedAt: data.finishedAt.present
@@ -1748,6 +1790,7 @@ class WeighingSessionRow extends DataClass
           ..write('currentStepIndex: $currentStepIndex, ')
           ..write('plannedTotalDg: $plannedTotalDg, ')
           ..write('measuredTotalMg: $measuredTotalMg, ')
+          ..write('toleranceMg: $toleranceMg, ')
           ..write('status: $status, ')
           ..write('startedAt: $startedAt, ')
           ..write('finishedAt: $finishedAt')
@@ -1765,6 +1808,7 @@ class WeighingSessionRow extends DataClass
     currentStepIndex,
     plannedTotalDg,
     measuredTotalMg,
+    toleranceMg,
     status,
     startedAt,
     finishedAt,
@@ -1781,6 +1825,7 @@ class WeighingSessionRow extends DataClass
           other.currentStepIndex == this.currentStepIndex &&
           other.plannedTotalDg == this.plannedTotalDg &&
           other.measuredTotalMg == this.measuredTotalMg &&
+          other.toleranceMg == this.toleranceMg &&
           other.status == this.status &&
           other.startedAt == this.startedAt &&
           other.finishedAt == this.finishedAt);
@@ -1795,6 +1840,7 @@ class WeighingSessionsCompanion extends UpdateCompanion<WeighingSessionRow> {
   final Value<int> currentStepIndex;
   final Value<int> plannedTotalDg;
   final Value<int?> measuredTotalMg;
+  final Value<int?> toleranceMg;
   final Value<SessionStatus> status;
   final Value<DateTime> startedAt;
   final Value<DateTime?> finishedAt;
@@ -1808,6 +1854,7 @@ class WeighingSessionsCompanion extends UpdateCompanion<WeighingSessionRow> {
     this.currentStepIndex = const Value.absent(),
     this.plannedTotalDg = const Value.absent(),
     this.measuredTotalMg = const Value.absent(),
+    this.toleranceMg = const Value.absent(),
     this.status = const Value.absent(),
     this.startedAt = const Value.absent(),
     this.finishedAt = const Value.absent(),
@@ -1822,6 +1869,7 @@ class WeighingSessionsCompanion extends UpdateCompanion<WeighingSessionRow> {
     this.currentStepIndex = const Value.absent(),
     required int plannedTotalDg,
     this.measuredTotalMg = const Value.absent(),
+    this.toleranceMg = const Value.absent(),
     required SessionStatus status,
     required DateTime startedAt,
     this.finishedAt = const Value.absent(),
@@ -1842,6 +1890,7 @@ class WeighingSessionsCompanion extends UpdateCompanion<WeighingSessionRow> {
     Expression<int>? currentStepIndex,
     Expression<int>? plannedTotalDg,
     Expression<int>? measuredTotalMg,
+    Expression<int>? toleranceMg,
     Expression<String>? status,
     Expression<DateTime>? startedAt,
     Expression<DateTime>? finishedAt,
@@ -1856,6 +1905,7 @@ class WeighingSessionsCompanion extends UpdateCompanion<WeighingSessionRow> {
       if (currentStepIndex != null) 'current_step_index': currentStepIndex,
       if (plannedTotalDg != null) 'planned_total_dg': plannedTotalDg,
       if (measuredTotalMg != null) 'measured_total_mg': measuredTotalMg,
+      if (toleranceMg != null) 'tolerance_mg': toleranceMg,
       if (status != null) 'status': status,
       if (startedAt != null) 'started_at': startedAt,
       if (finishedAt != null) 'finished_at': finishedAt,
@@ -1872,6 +1922,7 @@ class WeighingSessionsCompanion extends UpdateCompanion<WeighingSessionRow> {
     Value<int>? currentStepIndex,
     Value<int>? plannedTotalDg,
     Value<int?>? measuredTotalMg,
+    Value<int?>? toleranceMg,
     Value<SessionStatus>? status,
     Value<DateTime>? startedAt,
     Value<DateTime?>? finishedAt,
@@ -1886,6 +1937,7 @@ class WeighingSessionsCompanion extends UpdateCompanion<WeighingSessionRow> {
       currentStepIndex: currentStepIndex ?? this.currentStepIndex,
       plannedTotalDg: plannedTotalDg ?? this.plannedTotalDg,
       measuredTotalMg: measuredTotalMg ?? this.measuredTotalMg,
+      toleranceMg: toleranceMg ?? this.toleranceMg,
       status: status ?? this.status,
       startedAt: startedAt ?? this.startedAt,
       finishedAt: finishedAt ?? this.finishedAt,
@@ -1920,6 +1972,9 @@ class WeighingSessionsCompanion extends UpdateCompanion<WeighingSessionRow> {
     if (measuredTotalMg.present) {
       map['measured_total_mg'] = Variable<int>(measuredTotalMg.value);
     }
+    if (toleranceMg.present) {
+      map['tolerance_mg'] = Variable<int>(toleranceMg.value);
+    }
     if (status.present) {
       map['status'] = Variable<String>(
         $WeighingSessionsTable.$converterstatus.toSql(status.value),
@@ -1948,6 +2003,7 @@ class WeighingSessionsCompanion extends UpdateCompanion<WeighingSessionRow> {
           ..write('currentStepIndex: $currentStepIndex, ')
           ..write('plannedTotalDg: $plannedTotalDg, ')
           ..write('measuredTotalMg: $measuredTotalMg, ')
+          ..write('toleranceMg: $toleranceMg, ')
           ..write('status: $status, ')
           ..write('startedAt: $startedAt, ')
           ..write('finishedAt: $finishedAt, ')
@@ -3932,6 +3988,7 @@ typedef $$WeighingSessionsTableCreateCompanionBuilder =
       Value<int> currentStepIndex,
       required int plannedTotalDg,
       Value<int?> measuredTotalMg,
+      Value<int?> toleranceMg,
       required SessionStatus status,
       required DateTime startedAt,
       Value<DateTime?> finishedAt,
@@ -3947,6 +4004,7 @@ typedef $$WeighingSessionsTableUpdateCompanionBuilder =
       Value<int> currentStepIndex,
       Value<int> plannedTotalDg,
       Value<int?> measuredTotalMg,
+      Value<int?> toleranceMg,
       Value<SessionStatus> status,
       Value<DateTime> startedAt,
       Value<DateTime?> finishedAt,
@@ -4043,6 +4101,11 @@ class $$WeighingSessionsTableFilterComposer
 
   ColumnFilters<int> get measuredTotalMg => $composableBuilder(
     column: $table.measuredTotalMg,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get toleranceMg => $composableBuilder(
+    column: $table.toleranceMg,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4155,6 +4218,11 @@ class $$WeighingSessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get toleranceMg => $composableBuilder(
+    column: $table.toleranceMg,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get status => $composableBuilder(
     column: $table.status,
     builder: (column) => ColumnOrderings(column),
@@ -4229,6 +4297,11 @@ class $$WeighingSessionsTableAnnotationComposer
 
   GeneratedColumn<int> get measuredTotalMg => $composableBuilder(
     column: $table.measuredTotalMg,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get toleranceMg => $composableBuilder(
+    column: $table.toleranceMg,
     builder: (column) => column,
   );
 
@@ -4330,6 +4403,7 @@ class $$WeighingSessionsTableTableManager
                 Value<int> currentStepIndex = const Value.absent(),
                 Value<int> plannedTotalDg = const Value.absent(),
                 Value<int?> measuredTotalMg = const Value.absent(),
+                Value<int?> toleranceMg = const Value.absent(),
                 Value<SessionStatus> status = const Value.absent(),
                 Value<DateTime> startedAt = const Value.absent(),
                 Value<DateTime?> finishedAt = const Value.absent(),
@@ -4343,6 +4417,7 @@ class $$WeighingSessionsTableTableManager
                 currentStepIndex: currentStepIndex,
                 plannedTotalDg: plannedTotalDg,
                 measuredTotalMg: measuredTotalMg,
+                toleranceMg: toleranceMg,
                 status: status,
                 startedAt: startedAt,
                 finishedAt: finishedAt,
@@ -4358,6 +4433,7 @@ class $$WeighingSessionsTableTableManager
                 Value<int> currentStepIndex = const Value.absent(),
                 required int plannedTotalDg,
                 Value<int?> measuredTotalMg = const Value.absent(),
+                Value<int?> toleranceMg = const Value.absent(),
                 required SessionStatus status,
                 required DateTime startedAt,
                 Value<DateTime?> finishedAt = const Value.absent(),
@@ -4371,6 +4447,7 @@ class $$WeighingSessionsTableTableManager
                 currentStepIndex: currentStepIndex,
                 plannedTotalDg: plannedTotalDg,
                 measuredTotalMg: measuredTotalMg,
+                toleranceMg: toleranceMg,
                 status: status,
                 startedAt: startedAt,
                 finishedAt: finishedAt,

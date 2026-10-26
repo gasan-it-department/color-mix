@@ -20,10 +20,16 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      // v2: sessions keep the tolerance they were weighed with
+      if (from < 2) {
+        await m.addColumn(weighingSessions, weighingSessions.toleranceMg);
+      }
+    },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },

@@ -1,6 +1,6 @@
 # ColorMix Studio
 
-Hair color formula + Bluetooth scale prototype. Flutter app (Android first, Windows desktop, iOS later) plus ESP32 + HX711 scale firmware (firmware not started yet).
+Hair color formula + Bluetooth scale prototype. Flutter app (Android first, Windows desktop, iOS later) plus ESP32 + HX711 scale firmware in `firmware/`.
 
 Pick a target color, set Color A/B/C percentages and a total, get exact gram amounts, then weigh them into one bowl on the scale with live readings. Works offline, no account.
 
@@ -16,7 +16,7 @@ flutter run -d windows
 flutter run -d <phone id>
 ```
 
-- run `build_runner` again after touching `lib/core/database/tables.dart`
+- run `build_runner` again after touching `lib/core/database/tables.dart`, and add a step to the migration in `app_database.dart` with a schemaVersion bump
 - Windows builds need Developer Mode on (Flutter symlinks the plugins)
 - Bluetooth only works on a real phone, not the emulator
 - web is only for previewing screens, real Bluetooth never runs there. `web/sqlite3.wasm` and `web/drift_worker.js` come from the drift-2.35.3 GitHub release, update them together with drift
@@ -27,7 +27,7 @@ flutter run -d <phone id>
 lib/
   app/        app, router, shell, theme
   core/       constants, database (drift), bluetooth (scale interface), utils, widgets
-  features/   dashboard, color_studio, formulation, scale, weighing, saved_formulas, settings
+  features/   dashboard, color_studio, formulation, scale, weighing, saved_formulas, history, settings
   shared/     models + widgets used by more than one feature
 firmware/     esp32 scale firmware, PlatformIO
 docs/         decisions, ble protocol, hardware test sheet
@@ -53,5 +53,5 @@ No doubles in the formula maths.
 - [x] 4 simulated weighing: simulator, bowl zero, live display, cumulative targets, overshoot, disconnects, sessions saved, `docs/protocol.md`
 - [x] 5 esp32 firmware: HX711, calibration in NVS, BLE service, tare, serial menu. Builds and PC tests pass, not run on a board yet
 - [x] 6 real bluetooth: scan, permissions, ESP32 adapter with checks, auto-reconnect, last scale remembered, 0x181D scales as experimental. Tested against a fake radio, not a board yet
-- [ ] 7 session history, settings, calibration ui
+- [x] 7 session history and detail, interrupted sessions, settings (tolerance, steadiness, sounds, auto-advance, starting dye), calibration wizard, saved formulas search / duplicate / delete. Calibration tested against the fake radio, not a board yet
 - [ ] 8 end-to-end runs, hardware checks, docs

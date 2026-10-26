@@ -85,7 +85,7 @@ Needs a known weight of at least 10 g. 200 g or more is better, a 500 g kitchen-
 4. Check with one or two other weights (`w` to watch the reading). See [../../docs/hardware_test.md](../../docs/hardware_test.md) for the full check
 5. `x` and start again if it's off
 
-The same two steps work over BLE (CAL_ZERO, CAL_KNOWN_MASS). The app's calibration screen comes in phase 7.
+The same two steps work over BLE (CAL_ZERO, CAL_KNOWN_MASS), that's what the app's calibration screen does: Scale tab, Calibrate. It walks through both steps and then checks the reading against known weights.
 
 Until it's calibrated, frames carry the uncalibrated flag and grams use a rough default factor.
 

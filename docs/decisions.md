@@ -62,7 +62,7 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 - Stale: no reading for 1 s while connected, including a scale that connects and never sends anything. Nothing confirms while stale.
 - Disconnects pause the session, the progress stays. After reconnecting, if the reading moved more than 1 g the screen says so.
 - Actions within 0.6 s of the last step change are ignored. "Finish" and "Complete and save" sit in the same spot, a double tap used to skip the final check.
-- Sessions save as they go: a row per session with planned amounts copied in, a row per step with target vs actual. Completed or cancelled at the end, an app killed mid-mix leaves it in progress (phase 7 can show those as interrupted).
+- Sessions save as they go: a row per session with planned amounts copied in, a row per step with target vs actual. Completed or cancelled at the end, an app killed mid-mix leaves it in progress and the next start marks it interrupted.
 - Sounds and haptics on approaching, reached, over and disconnected, sounds follow the setting. Platforms without system sounds just don't play them.
 - Screen kept on while the weighing screen is open (wakelock_plus, ignored where unsupported).
 - Phones: the main action goes full width on top, Previous below it, and the steps table turns into two lines per step.
@@ -92,12 +92,26 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 - Stream subscription `cancel()` futures aren't awaited anywhere. A broadcast subscription returns an already-done root-zone future: awaiting it gains nothing and hangs Flutter's fake-time tests.
 - Not tried against real hardware yet, there's no board. The first real run goes through `docs/hardware_test.md`.
 
+## History, settings, calibration (phase 7)
+
+- History lives in the Formulas tab, Formulas | History, one search box for both (names and notes / formula and scale). It's a second view of saved work rather than a fifth tab: four tabs fit a 360 px phone, five don't.
+- A session that's still "in progress" when the app starts was cut off by the app closing. `main()` marks those interrupted before the first frame. Their confirmed steps stay on the record.
+- Sessions keep the tolerance they were weighed with (schema v2, the one migration so far). Older rows have none and are judged by today's setting. A past session shouldn't turn red because the setting moved later.
+- Session detail: totals, then target / added / off by per step, the same table the end of weighing shows (`DeviationTable`). Manual moves keep their "Moved on" tag. A session can be deleted, the formula stays. Deleting a formula keeps its sessions, they just lose the link.
+- The formula editor shows that formula's sessions under the result, newest three and "show all".
+- Formula menu: Weigh (straight to the start sheet), Duplicate ("X (copy)", then "(copy 2)"... new ids, dated now, a demo stays a demo), Delete (confirm sheet, says history stays). No undo on delete, the sheet is the check.
+- Settings: theme; sounds and auto-advance; tolerance as chips (0.1, 0.2, 0.3, 0.5, 1.0 g); steady threshold and settle time folded under Advanced with a way back to the defaults; starting dye amount in 5 g steps (10 to 300 g); the scale's status with Manage and Calibrate. Weighing settings apply from the next session, a running one keeps what it started with.
+- Calibration wizard (`/calibrate`), ColorMix scale only: 1 empty the platform -> CAL_ZERO, 2 reference weight and its exact mass (10 g up to the scale's capacity) -> CAL_KNOWN_MASS, 3 check the live reading against the reference, or any other known weight, pass or fail against the tolerance. The scale answers after its 2 s average, so calibration commands wait 8 s rather than tare's 4. Busy, failed and old firmware each get a plain message and the step stays put. After it works the app reads the info text again (cal=1) and the "not calibrated" note goes.
+- Calibrate is on the Scale tab (the stronger button while the scale still needs it), in Settings, and in the start sheet, which won't start weighing on an uncalibrated ColorMix scale. Its readings are only a rough default factor.
+- A brand-new formula's editor makes its seed with a fresh id on every route rebuild, and coming back from weighing rebuilds it. The editor holds on to the seed it opened with. Before that, saving again after weighing made a second copy of the formula.
+- Snackbars with an action stay up until tapped in this Flutter. "Formula saved · View all" and "Copied · Open" are only shortcuts, so they time out like the rest.
+
 ## Firmware (phase 5)
 
 - `firmware/esp32_color_mix_scale`, PlatformIO, Arduino core 3.3 through the official espressif32 v8 platform. Details and wiring in its README.
 - The parts with no hardware (frame encoding, control decoding, median / steady filters, calibration maths) live in `lib/scale_core` with no Arduino includes, and `pio test -e native` runs them on the PC with the same frame vectors as the Dart tests. Both sides are checked against the same bytes without a board.
 - Nothing blocks the loop. The HX711 is only read when it says it has a sample, calibration averages the next 20 samples while frames keep going, control writes are queued from the BLE task and run in the loop.
-- Calibration is two steps, zero then a known weight (at least 10 g), saved in NVS. The known-weight step needs a zero from the same power-up, and both fail if the reading moved while averaging. CAL_ZERO / CAL_KNOWN_MASS are in the firmware already, so phase 7 is app work only.
+- Calibration is two steps, zero then a known weight (at least 10 g), saved in NVS. The known-weight step needs a zero from the same power-up, and both fail if the reading moved while averaging. The app's wizard drives the same two steps over BLE (CAL_ZERO / CAL_KNOWN_MASS).
 - Device tare isn't saved. The weighing screen doesn't use it.
 - A dead HX711 still gets frames out every 100 ms with the sensor fault flag, so "board alive, sensor not" is something the app can show.
 - No BLE pairing. Prototype on a bench, noted in the firmware README.
@@ -109,7 +123,7 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 - The app decides "stable", not the firmware. Configurable threshold and dwell, same rule for every scale. Firmware's flag is diagnostic.
 - Session zero is the stable reading with the empty bowl, kept in the app. Works the same on the simulator, the ESP32 and 0x181D scales that can't be tared remotely, and no risk of an in-flight pre-tare frame being read as zero. Firmware TARE stays for the scale screen.
 - Overload is checked on the gross weight. Tare hides the bowl but the load cell still carries it.
-- Calibration: serial menu now (phase 5), CAL_ZERO + CAL_KNOWN_MASS are already in the firmware for the in-app wizard (phase 7).
+- Calibration: the in-app wizard (CAL_ZERO + CAL_KNOWN_MASS), or the serial menu with a laptop plugged in.
 - Weight frame (phase 4 protocol doc), 8 bytes little-endian: version, flags (stable, overload, uncalibrated, sensor fault), uint16 sequence, int32 milligrams. 10 Hz from the HX711's 10 SPS mode. No frame for 1 s or sequence going backwards = stale, weighing pauses.
 
 ## Firmware

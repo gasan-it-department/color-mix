@@ -26,4 +26,9 @@ abstract final class Routes {
   static String formula(String id) => '/formula/$id';
 
   static String weigh(String formulaId) => '/weigh/$formulaId';
+
+  /// one past weighing session
+  static String session(String id) => '/history/$id';
+
+  static const calibrate = '/calibrate';
 }

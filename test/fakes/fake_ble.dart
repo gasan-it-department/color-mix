@@ -16,6 +16,8 @@ class FakePeripheral {
     this.info = 'fw=0.1.0;proto=1;cap_g=1000;cal=1',
     this.rssi = -60,
     this.tareResult = ControlResult.ok,
+    this.calZeroResult = ControlResult.ok,
+    this.calMassResult = ControlResult.ok,
     this.answersControl = true,
   });
 
@@ -26,7 +28,12 @@ class FakePeripheral {
   String info;
   int rssi;
   int tareResult;
+  int calZeroResult;
+  int calMassResult;
   bool answersControl;
+
+  /// how long calibration replies take, the real one averages 2 s
+  Duration calDelay = Duration.zero;
 
   /// out of range or switched off
   bool reachable = true;
@@ -273,12 +280,28 @@ class FakeBleTransport implements BleTransport {
       return;
     }
     final op = value[0];
-    final result = op == ControlOp.tare ? p.tareResult : ControlResult.ok;
-    scheduleMicrotask(
-      () => sendBytes(deviceId, ColorMixScaleUuids.control, [
+    final result = switch (op) {
+      ControlOp.tare => p.tareResult,
+      ControlOp.calZero => p.calZeroResult,
+      ControlOp.calKnownMass => p.calMassResult,
+      _ => ControlResult.ok,
+    };
+    void reply() {
+      // the firmware rewrites its info text once calibrated
+      if (op == ControlOp.calKnownMass && result == ControlResult.ok) {
+        p.info = p.info.replaceFirst('cal=0', 'cal=1');
+      }
+      sendBytes(deviceId, ColorMixScaleUuids.control, [
         op | ControlOp.replyBit,
         result,
-      ]),
-    );
+      ]);
+    }
+
+    final calibrating = op == ControlOp.calZero || op == ControlOp.calKnownMass;
+    if (calibrating && p.calDelay > Duration.zero) {
+      Timer(p.calDelay, reply);
+    } else {
+      scheduleMicrotask(reply);
+    }
   }
 }
