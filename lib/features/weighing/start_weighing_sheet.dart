@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:colormix_studio/core/bluetooth/ble_scale_device.dart';
 import 'package:colormix_studio/core/bluetooth/scale_providers.dart';
 import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
 import 'package:colormix_studio/core/widgets/connection_chip.dart';
+import 'package:colormix_studio/features/settings/settings_providers.dart';
 import 'package:colormix_studio/features/weighing/weighing_state.dart';
 import 'package:colormix_studio/shared/models/color_formula.dart';
 import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
@@ -44,7 +46,15 @@ class _StartSheetState extends ConsumerState<_StartSheet> {
     final scale = ref.watch(scaleProvider);
     final steps = stepsFor(f);
     final ratio = f.developerRatio;
-    final ready = scale.isConnected && (ratio == null || _ratioChecked);
+    final settings = ref.watch(settingsProvider);
+    final device = scale.device;
+    // a standard 0x181D scale sends the odd reading, not a live weight
+    final cantGuide = device is BleScaleDevice && device.experimental;
+    final ready =
+        scale.isConnected && !cantGuide && (ratio == null || _ratioChecked);
+    final showLast =
+        settings.lastScaleId != null &&
+        !(device is BleScaleDevice && device.deviceId == settings.lastScaleId);
 
     // what the scale should read after each step
     final totals = <int>[];
@@ -115,16 +125,39 @@ class _StartSheetState extends ConsumerState<_StartSheet> {
             ],
             const SizedBox(height: 16),
             // stacked, side by side the button squeezes the status on phones
-            if (scale.device == null)
+            if (device == null)
               Text('No scale connected', style: theme.textTheme.bodyMedium)
-            else
-              ConnectionChip(
-                name: scale.device!.info.name,
-                state: scale.connection,
-              ),
+            else ...[
+              ConnectionChip(name: device.info.name, state: scale.connection),
+              if (device.problem != null && !scale.isConnected) ...[
+                const SizedBox(height: 4),
+                Text(device.problem!, style: muted),
+              ],
+            ],
             if (!scale.isConnected) ...[
               const SizedBox(height: 10),
-              FilledButton.tonalIcon(
+              if (showLast) ...[
+                FilledButton.tonalIcon(
+                  onPressed: () =>
+                      ref.read(scaleProvider.notifier).connectLast(),
+                  icon: const Icon(Icons.bluetooth, size: 18),
+                  label: Text(
+                    'Connect ${settings.lastScaleName ?? 'last scale'}',
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              OutlinedButton.icon(
+                onPressed: () {
+                  final router = GoRouter.of(context);
+                  Navigator.pop(context);
+                  router.go(Routes.scale);
+                },
+                icon: const Icon(Icons.bluetooth_searching, size: 18),
+                label: const Text('Find a scale'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
                 onPressed: () =>
                     ref.read(scaleProvider.notifier).useSimulator(),
                 icon: const Icon(Icons.science_outlined, size: 18),
@@ -147,6 +180,10 @@ class _StartSheetState extends ConsumerState<_StartSheet> {
               Text(
                 !scale.isConnected
                     ? 'Connect a scale first.'
+                    : cantGuide
+                    ? 'This scale only sends a reading now and then, it '
+                          'can\'t guide pouring. Use the ColorMix scale or '
+                          'the simulator.'
                     : 'Tick the developer check first.',
                 textAlign: TextAlign.center,
                 style: muted,

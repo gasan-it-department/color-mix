@@ -72,6 +72,9 @@ class SimulatedScale extends ChangeNotifier implements ScaleDevice {
   bool get supportsTare => true;
 
   @override
+  String? get problem => null;
+
+  @override
   Future<void> connect() {
     if (_closed || isConnected || _state == ScaleConnectionState.connecting) {
       return Future.value();

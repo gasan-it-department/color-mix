@@ -98,7 +98,7 @@ Until it's calibrated, frames carry the uncalibrated flag and grams use a rough 
 - Advertising restarts by itself after a disconnect
 - No pairing or encryption. It's a prototype on a salon bench, anyone nearby with a BLE app can read the weight or send a tare
 
-Before the app's BLE adapter exists (phase 6), nRF Connect on a phone is enough to check it: scan, connect to ColorMix Scale, enable notifications on `7a3e0002…` and watch the 8-byte frames, write `01` to `7a3e0004…` to tare.
+In the app: Scale tab, Scan, Connect on "ColorMix Scale". It checks the service and the protocol version before it trusts the scale. To look underneath, nRF Connect on a phone works too: connect to ColorMix Scale, enable notifications on `7a3e0002…` and watch the 8-byte frames, write `01` to `7a3e0004…` to tare.
 
 ## Code
 

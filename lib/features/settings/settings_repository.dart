@@ -17,6 +17,8 @@ class SettingsRepository {
   static const _defaultDyeDg = 'default_dye_dg';
   static const _stabilityThresholdMg = 'stability_threshold_mg';
   static const _stabilityDwellMs = 'stability_dwell_ms';
+  static const _lastScaleId = 'last_scale_id';
+  static const _lastScaleName = 'last_scale_name';
 
   Future<AppSettings> load() async {
     final rows = await _db.select(_db.appSettingsTable).get();
@@ -34,6 +36,8 @@ class SettingsRepository {
           d.stabilityThresholdMg,
       stabilityDwellMs:
           int.tryParse(map[_stabilityDwellMs] ?? '') ?? d.stabilityDwellMs,
+      lastScaleId: _nonEmpty(map[_lastScaleId]),
+      lastScaleName: _nonEmpty(map[_lastScaleName]),
     );
   }
 
@@ -46,6 +50,9 @@ class SettingsRepository {
       _defaultDyeDg: '${s.defaultDyeDg}',
       _stabilityThresholdMg: '${s.stabilityThresholdMg}',
       _stabilityDwellMs: '${s.stabilityDwellMs}',
+      // empty string = none, rows are never deleted
+      _lastScaleId: s.lastScaleId ?? '',
+      _lastScaleName: s.lastScaleName ?? '',
     };
 
     await _db.batch((b) {
@@ -55,6 +62,8 @@ class SettingsRepository {
       ]);
     });
   }
+
+  static String? _nonEmpty(String? v) => v == null || v.isEmpty ? null : v;
 
   static bool? _bool(String? v) => switch (v) {
     'true' => true,

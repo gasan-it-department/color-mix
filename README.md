@@ -52,6 +52,6 @@ No doubles in the formula maths.
 - [x] 3 formula calculator: 1-3 colors, exact weights, developer by weight, validation, save and edit
 - [x] 4 simulated weighing: simulator, bowl zero, live display, cumulative targets, overshoot, disconnects, sessions saved, `docs/protocol.md`
 - [x] 5 esp32 firmware: HX711, calibration in NVS, BLE service, tare, serial menu. Builds and PC tests pass, not run on a board yet
-- [ ] 6 real bluetooth
+- [x] 6 real bluetooth: scan, permissions, ESP32 adapter with checks, auto-reconnect, last scale remembered, 0x181D scales as experimental. Tested against a fake radio, not a board yet
 - [ ] 7 session history, settings, calibration ui
 - [ ] 8 end-to-end runs, hardware checks, docs

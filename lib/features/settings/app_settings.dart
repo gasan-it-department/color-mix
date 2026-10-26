@@ -9,6 +9,8 @@ class AppSettings {
     this.defaultDyeDg = 600,
     this.stabilityThresholdMg = 200,
     this.stabilityDwellMs = 800,
+    this.lastScaleId,
+    this.lastScaleName,
   });
 
   final ThemeMode themeMode;
@@ -28,6 +30,10 @@ class AppSettings {
   final int stabilityThresholdMg;
   final int stabilityDwellMs;
 
+  /// the ble scale used last, so it can be reconnected without a scan
+  final String? lastScaleId;
+  final String? lastScaleName;
+
   AppSettings copyWith({
     ThemeMode? themeMode,
     bool? soundsOn,
@@ -45,6 +51,21 @@ class AppSettings {
       defaultDyeDg: defaultDyeDg ?? this.defaultDyeDg,
       stabilityThresholdMg: stabilityThresholdMg ?? this.stabilityThresholdMg,
       stabilityDwellMs: stabilityDwellMs ?? this.stabilityDwellMs,
+      lastScaleId: lastScaleId,
+      lastScaleName: lastScaleName,
     );
   }
+
+  /// null clears it
+  AppSettings withLastScale(String? id, String? name) => AppSettings(
+    themeMode: themeMode,
+    soundsOn: soundsOn,
+    toleranceDg: toleranceDg,
+    autoAdvance: autoAdvance,
+    defaultDyeDg: defaultDyeDg,
+    stabilityThresholdMg: stabilityThresholdMg,
+    stabilityDwellMs: stabilityDwellMs,
+    lastScaleId: id,
+    lastScaleName: id == null ? null : name,
+  );
 }

@@ -77,6 +77,21 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 
 - Written ahead of the firmware in `docs/protocol.md`, with the Dart codec in `lib/core/bluetooth/esp32_protocol.dart` and its test vectors, so phase 5 and phase 6 code to the same bytes.
 
+## Real Bluetooth (phase 6)
+
+- `BleTransport` (`lib/core/bluetooth/ble_transport.dart`) is the handful of calls the app makes, with `UniversalBleTransport` as the real one. Tests use `test/fakes/fake_ble.dart`, a fake radio with a fake ESP32 that answers control writes like the firmware, so the adapter, the scan and the screens are all tested without a board. Every widget test gets the fake by default, the real plugin leaves platform timers behind.
+- One `BleScaleDevice` for every BLE scale. It connects, looks at the services, and picks: our ESP32 service, the standard 0x181D weight scale, or neither (connected but unsupported, with a message). For the ESP32 it checks the three characteristics and their properties and reads the info text: anything but proto=1 is refused with a message saying the versions don't match.
+- Frames: undecodable ones are counted and dropped, a sequence that isn't newer (allowing for the 16-bit wrap) is dropped, sensor-fault frames are dropped too so the weighing screen goes stale, and the scale screen says the sensor isn't answering. After a reconnect the sequence starts over, a restarted ESP32 counts from 1.
+- A first connect that fails says so straight away. A link that drops after working is retried after 2, 4 and 8 s while the screens show "connecting", then gives up with a message. A disconnect the app asked for is never retried.
+- Tare writes TARE and waits up to 4 s for the reply. Busy and no answer both come back as plain messages on the scale screen.
+- Standard 0x181D scales work but are labelled experimental: they send a finished reading now and then, not a live weight, so the start sheet won't begin weighing with one.
+- Scanning lists everything nearby but shows ColorMix scales first, other scales next, and folds the rest under "Show N other devices". Nameless devices aren't listed. A scan stops after 15 s or when a scale is picked. Bluetooth off, no Bluetooth, no permission and the browser preview each get their own message.
+- The last scale that connected properly is remembered (settings), so the scale tab and the start sheet offer "Connect ColorMix Scale" without a scan. Forget clears it.
+- Android permissions are in the app manifest (the plugin only declares the old ones): BLUETOOTH_SCAN with neverForLocation, BLUETOOTH_CONNECT, and location up to Android 11 where scanning still needs it.
+- The web preview has no Bluetooth, web bluetooth needs a picker flow this app doesn't have. The simulator still runs everything there.
+- Stream subscription `cancel()` futures aren't awaited anywhere. A broadcast subscription returns an already-done root-zone future: awaiting it gains nothing and hangs Flutter's fake-time tests.
+- Not tried against real hardware yet, there's no board. The first real run goes through `docs/hardware_test.md`.
+
 ## Firmware (phase 5)
 
 - `firmware/esp32_color_mix_scale`, PlatformIO, Arduino core 3.3 through the official espressif32 v8 platform. Details and wiring in its README.

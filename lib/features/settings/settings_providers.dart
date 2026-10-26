@@ -37,6 +37,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
   Future<void> setDefaultDyeDg(int dg) =>
       _update(state.copyWith(defaultDyeDg: dg));
 
+  Future<void> setLastScale(String? id, String? name) =>
+      _update(state.withLastScale(id, name));
+
   // ui updates first, the write follows
   Future<void> _update(AppSettings next) async {
     state = next;
