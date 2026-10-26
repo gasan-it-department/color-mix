@@ -9,6 +9,7 @@ import 'package:colormix_studio/features/formulation/formula_editor_screen.dart'
 import 'package:colormix_studio/features/saved_formulas/saved_formulas_screen.dart';
 import 'package:colormix_studio/features/scale/scale_screen.dart';
 import 'package:colormix_studio/features/settings/settings_screen.dart';
+import 'package:colormix_studio/features/weighing/weighing_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
@@ -56,6 +57,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/weigh/:formulaId',
+        builder: (context, state) =>
+            WeighingScreen(formulaId: state.pathParameters['formulaId']!),
       ),
       GoRoute(
         path: '/formula/:id',

@@ -237,8 +237,8 @@ class _ScaleStatusCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scale = ref.watch(activeScaleProvider);
-    final connected = scale?.isConnected ?? false;
+    final scale = ref.watch(scaleProvider);
+    final connected = scale.isConnected;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
@@ -269,7 +269,7 @@ class _ScaleStatusCard extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             connected
-                ? scale!.info.name
+                ? scale.device!.info.name
                 : 'Connect the ColorMix scale, or use the simulated scale '
                       'to practice.',
             style: theme.textTheme.bodyMedium?.copyWith(

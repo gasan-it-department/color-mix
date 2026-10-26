@@ -50,7 +50,7 @@ No doubles in the formula maths.
 - [x] 1 foundation: routing, theme, dashboard, responsive shell, drift db, settings
 - [x] 2 color studio: demo palette, custom picker, labelled demo recipes, nearest demo shade
 - [x] 3 formula calculator: 1-3 colors, exact weights, developer by weight, validation, save and edit
-- [ ] 4 simulated weighing + `docs/protocol.md`
+- [x] 4 simulated weighing: simulator, bowl zero, live display, cumulative targets, overshoot, disconnects, sessions saved, `docs/protocol.md`
 - [ ] 5 esp32 firmware
 - [ ] 6 real bluetooth
 - [ ] 7 session history, settings, calibration ui

@@ -24,4 +24,6 @@ abstract final class Routes {
   static const formulaNew = '/formula/new';
 
   static String formula(String id) => '/formula/$id';
+
+  static String weigh(String formulaId) => '/weigh/$formulaId';
 }

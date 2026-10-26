@@ -28,5 +28,7 @@ abstract interface class ScaleDevice {
   Future<void> connect();
   Future<void> disconnect();
   Future<void> tare();
-  Future<void> dispose();
+
+  /// done with this device for good: stop everything, close the streams
+  Future<void> close();
 }

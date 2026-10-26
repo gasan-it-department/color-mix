@@ -15,6 +15,8 @@ class SettingsRepository {
   static const _toleranceDg = 'tolerance_dg';
   static const _autoAdvance = 'auto_advance';
   static const _defaultDyeDg = 'default_dye_dg';
+  static const _stabilityThresholdMg = 'stability_threshold_mg';
+  static const _stabilityDwellMs = 'stability_dwell_ms';
 
   Future<AppSettings> load() async {
     final rows = await _db.select(_db.appSettingsTable).get();
@@ -27,6 +29,11 @@ class SettingsRepository {
       toleranceDg: int.tryParse(map[_toleranceDg] ?? '') ?? d.toleranceDg,
       autoAdvance: _bool(map[_autoAdvance]) ?? d.autoAdvance,
       defaultDyeDg: int.tryParse(map[_defaultDyeDg] ?? '') ?? d.defaultDyeDg,
+      stabilityThresholdMg:
+          int.tryParse(map[_stabilityThresholdMg] ?? '') ??
+          d.stabilityThresholdMg,
+      stabilityDwellMs:
+          int.tryParse(map[_stabilityDwellMs] ?? '') ?? d.stabilityDwellMs,
     );
   }
 
@@ -37,6 +44,8 @@ class SettingsRepository {
       _toleranceDg: '${s.toleranceDg}',
       _autoAdvance: '${s.autoAdvance}',
       _defaultDyeDg: '${s.defaultDyeDg}',
+      _stabilityThresholdMg: '${s.stabilityThresholdMg}',
+      _stabilityDwellMs: '${s.stabilityDwellMs}',
     };
 
     await _db.batch((b) {

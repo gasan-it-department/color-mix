@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:colormix_studio/app/app.dart';
@@ -22,6 +23,7 @@ Future<void> pumpApp(
   WidgetTester tester,
   AppDatabase db, {
   Size size = phone,
+  List<Override> overrides = const [],
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -32,6 +34,7 @@ Future<void> pumpApp(
       overrides: [
         databaseProvider.overrideWithValue(db),
         initialSettingsProvider.overrideWithValue(const AppSettings()),
+        ...overrides,
       ],
       child: const ColorMixApp(),
     ),

@@ -16,6 +16,7 @@ class ResultCard extends StatelessWidget {
     required this.result,
     required this.developerMode,
     this.onSave,
+    this.onStartWeighing,
     this.saving = false,
   });
 
@@ -26,6 +27,9 @@ class ResultCard extends StatelessWidget {
 
   /// null hides the save button (phones have it in the bottom bar)
   final VoidCallback? onSave;
+
+  /// null while the formula can't be saved
+  final VoidCallback? onStartWeighing;
   final bool saving;
 
   @override
@@ -91,15 +95,21 @@ class ResultCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
           ],
-          const OutlinedButton(onPressed: null, child: Text('Start weighing')),
-          const SizedBox(height: 6),
-          Text(
-            'Weighing isn\'t in this build yet.',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+          OutlinedButton.icon(
+            onPressed: saving ? null : onStartWeighing,
+            icon: const Icon(Icons.scale_outlined, size: 18),
+            label: const Text('Start weighing'),
           ),
+          if (onStartWeighing == null) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Fix the formula first, then weigh it.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ],
       ),
     );

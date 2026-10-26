@@ -18,6 +18,7 @@ import 'package:colormix_studio/features/formulation/widgets/part_row.dart';
 import 'package:colormix_studio/features/formulation/widgets/result_card.dart';
 import 'package:colormix_studio/features/saved_formulas/formula_providers.dart';
 import 'package:colormix_studio/features/settings/settings_providers.dart';
+import 'package:colormix_studio/features/weighing/start_weighing_sheet.dart';
 import 'package:colormix_studio/shared/models/color_formula.dart';
 import 'package:colormix_studio/shared/widgets/label_tag.dart';
 
@@ -264,7 +265,8 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
 
   // ── save ──
 
-  Future<void> _save() async {
+  /// true once it's in the database
+  Future<bool> _save() async {
     final r = calculateFormula(_inputs);
     final messenger = ScaffoldMessenger.of(context);
 
@@ -274,7 +276,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
         ..showSnackBar(
           const SnackBar(content: Text('Fix the marked fields first.')),
         );
-      return;
+      return false;
     }
 
     final now = DateTime.now();
@@ -310,7 +312,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
     setState(() => _saving = true);
     try {
       await ref.read(formulaRepositoryProvider).save(formula);
-      if (!mounted) return;
+      if (!mounted) return true;
       setState(() {
         _saved = true;
         _dirty = false;
@@ -327,6 +329,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
             ),
           ),
         );
+      return true;
     } catch (_) {
       messenger
         ..hideCurrentSnackBar()
@@ -335,9 +338,22 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
             content: Text('Couldn\'t save the formula. Try again.'),
           ),
         );
+      return false;
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  /// weighing works on the saved formula, so save first if needed
+  Future<void> _startWeighing() async {
+    if (_dirty || !_saved) {
+      if (!await _save()) return;
+    }
+    final formula = await ref
+        .read(formulaRepositoryProvider)
+        .find(widget.seed.id);
+    if (formula == null || !mounted) return;
+    await showStartWeighingSheet(context, formula);
   }
 
   Future<void> _leave() async {
@@ -367,7 +383,8 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
       partColors: [for (final p in _parts) p.displayRgb],
       result: r,
       developerMode: _devMode,
-      onSave: wide ? _save : null,
+      onSave: wide ? () => _save() : null,
+      onStartWeighing: r.canSave ? _startWeighing : null,
       saving: _saving,
     );
 
@@ -482,7 +499,11 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
               ),
         bottomNavigationBar: wide
             ? null
-            : _SaveBar(mixtureDg: r.mixtureDg, saving: _saving, onSave: _save),
+            : _SaveBar(
+                mixtureDg: r.mixtureDg,
+                saving: _saving,
+                onSave: () => _save(),
+              ),
       ),
     );
   }

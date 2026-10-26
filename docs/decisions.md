@@ -51,7 +51,31 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 - Developer strength (10/20/30/40 vol) is optional, record only.
 - Saved formulas open in the same editor, so "recalculate for a different quantity" is just changing the dye amount and saving.
 - Unsaved changes ask before leaving, reset asks before throwing edits away. Both are bottom sheets, not dialogs.
-- Start weighing is there but disabled until phase 4.
+## Weighing (phase 4)
+
+- Start weighing saves the formula first if it needs it, then a "Ready to weigh" sheet shows the order with running totals, asks for the developer check (the blueprint's "confirm the product-compatible ratio" step) and needs a connected scale.
+- One bowl, zeroed once in the app (session zero), never tared again. Each step's target is the previous step's *actual* reading plus this step's planned amount, so an overshoot stays on that ingredient and the rest still get their full planned amounts. Nothing is ever rebalanced. Rules in `lib/features/weighing/weighing_state.dart`, pure, unit-tested.
+- Zones: under, approaching (within 1 g or a tenth of the step), on target (within the tolerance, 0.3 g for now), over. Neutral / amber / green / red.
+- A step only confirms on a steady, live, non-overloaded reading within tolerance. "Move on anyway" (short) and "Continue manually" (over) also need a steady reading and are recorded as manual, with the deviation.
+- Previous only works while nothing has been poured on top of the step being reopened.
+- Steady = readings over 800 ms within 0.2 g, smoothed with a 5-reading median (`stability_detector.dart`). Both numbers are settings, the real scale's noise decides them later.
+- Stale: no reading for 1 s while connected, including a scale that connects and never sends anything. Nothing confirms while stale.
+- Disconnects pause the session, the progress stays. After reconnecting, if the reading moved more than 1 g the screen says so.
+- Actions within 0.6 s of the last step change are ignored. "Finish" and "Complete and save" sit in the same spot, a double tap used to skip the final check.
+- Sessions save as they go: a row per session with planned amounts copied in, a row per step with target vs actual. Completed or cancelled at the end, an app killed mid-mix leaves it in progress (phase 7 can show those as interrupted).
+- Sounds and haptics on approaching, reached, over and disconnected, sounds follow the setting. Platforms without system sounds just don't play them.
+- Screen kept on while the weighing screen is open (wakelock_plus, ignored where unsupported).
+- Phones: the main action goes full width on top, Previous below it, and the steps table turns into two lines per step.
+
+## Simulator
+
+- `SimulatedScale` implements `ScaleDevice` like the real adapters will: 10 readings a second, ±0.04 g noise, 0.4 s to connect.
+- Controls: place a 250 g bowl, clear, +0.1 / +1 / +5 / −1 g, hold to pour (5 g/s), unsteady readings (±1.2 g), freeze readings (connected, nothing sent), drop the connection, reconnect. In a session also "pour to target" and "pour 2 g too much".
+- Timers and timestamps go through package:clock so tests run on fake time.
+
+## Protocol
+
+- Written ahead of the firmware in `docs/protocol.md`, with the Dart codec in `lib/core/bluetooth/esp32_protocol.dart` and its test vectors, so phase 5 and phase 6 code to the same bytes.
 
 ## Scale
 

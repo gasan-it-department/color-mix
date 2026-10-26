@@ -33,7 +33,8 @@ void main() {
 
     await tester.tap(find.text('Scale'));
     await tester.pumpAndSettle();
-    expect(find.text('No scale connected'), findsOneWidget);
+    expect(find.text('Connected scale'), findsOneWidget);
+    expect(find.text('Use simulated scale'), findsOneWidget);
 
     await unmountApp(tester);
   });
