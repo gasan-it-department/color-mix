@@ -28,7 +28,18 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 - Developer strength (10/20/30/40 vol) stored as a record only, no logic.
 - Developer ratios are by weight only for now. Volume needs a density per product.
 - Presets get optional level/tone (7.43) since that's how stylists name shades.
-- Nearest demo shade (phase 2) by CIELAB distance, not RGB.
+
+## Color Studio (phase 2)
+
+- The 15 demo shades and 4 demo recipes are const data in `lib/shared/data/demo_catalog.dart`, not db rows. Nobody edits them, and saved formulas only keep the preset id.
+- Recipes: Rose Gold (the blueprint's 50/30/20 at 1:1), Ash Blonde 1:1.5, Copper Brown (two parts on purpose) 1:1, Burgundy 1:2. All made up, always shown with the "Demo only" tag. No developer strength on them so they don't read as chemistry advice.
+- Swatch colors are picked by eye and the level/tone numbers are rough guides.
+- Three labels kept apart, with a legend behind the (i): visual target, demo only, validated (none exist yet).
+- Nearest demo shade by CIEDE2000 on CIELAB (`lib/core/utils/color_science.dart`, checked against Sharma's reference pairs). Shown in words only: almost the same < 2, close < 5, similar < 12, else not very close.
+- Picker: flex_color_picker's `ColorWheelPicker` (hue ring + saturation/brightness square) plus my own H/S/B sliders, HEX field and RGB readout. HSV lives in the picker state so the hue survives greys. Color name from `ColorTools.nameThatColor`.
+- Opening the picker with nothing picked makes its starting color the target. A picked shade stays the target until the picker is actually moved.
+- Phones: target pinned in a strip above the picker, recipe in a sheet. Sheets open on the root navigator so they cover the bottom bar.
+- "Create formula" is there but disabled until phase 3.
 
 ## Scale
 

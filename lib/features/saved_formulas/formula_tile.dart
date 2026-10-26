@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
 import 'package:colormix_studio/shared/models/color_formula.dart';
 import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
+import 'package:colormix_studio/shared/widgets/label_tag.dart';
 
 class FormulaTile extends StatelessWidget {
   const FormulaTile({super.key, required this.formula, this.onTap});
@@ -37,7 +38,10 @@ class FormulaTile extends StatelessWidget {
               ),
             ),
           ),
-          if (f.isDemo) ...[const SizedBox(width: 8), const _DemoTag()],
+          if (f.isDemo) ...[
+            const SizedBox(width: 8),
+            const LabelTag('Demo', tone: TagTone.warning),
+          ],
         ],
       ),
       subtitle: Text(
@@ -50,27 +54,6 @@ class FormulaTile extends StatelessWidget {
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
-      ),
-    );
-  }
-}
-
-class _DemoTag extends StatelessWidget {
-  const _DemoTag();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        'Demo',
-        style: Theme.of(context).textTheme.labelSmall
-            ?.copyWith(color: scheme.onSurfaceVariant),
       ),
     );
   }

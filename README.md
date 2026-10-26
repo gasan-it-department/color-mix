@@ -48,7 +48,7 @@ No doubles in the formula maths.
 
 - [x] 0 setup: Flutter 3.47, Android cmdline-tools + NDK 28.2, PlatformIO, git
 - [x] 1 foundation: routing, theme, dashboard, responsive shell, drift db, settings
-- [ ] 2 color studio
+- [x] 2 color studio: demo palette, custom picker, labelled demo recipes, nearest demo shade
 - [ ] 3 formula calculator
 - [ ] 4 simulated weighing + `docs/protocol.md`
 - [ ] 5 esp32 firmware
