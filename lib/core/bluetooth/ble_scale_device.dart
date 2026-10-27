@@ -77,6 +77,7 @@ class BleScaleDevice extends ChangeNotifier implements ScaleDevice {
   bool _reconnecting = false;
   int? _lastSeq;
   int _badFrames = 0;
+  int _missedFrames = 0;
   bool _wanted = false;
   bool _closed = false;
 
@@ -126,6 +127,10 @@ class BleScaleDevice extends ChangeNotifier implements ScaleDevice {
 
   /// frames that didn't decode, for diagnostics
   int get badFrames => _badFrames;
+
+  /// gaps in the sequence since this connection was set up: frames the
+  /// scale sent that never arrived
+  int get missedFrames => _missedFrames;
 
   @override
   Future<void> connect() async {
@@ -237,19 +242,52 @@ class BleScaleDevice extends ChangeNotifier implements ScaleDevice {
     if (!isConnected || !supportsCalibration) return;
     try {
       await _command(ControlOp.getStatus);
-      final text = utf8.decode(
-        await transport.read(
-          deviceId,
-          ColorMixScaleUuids.service,
-          ColorMixScaleUuids.info,
-        ),
-        allowMalformed: true,
-      );
-      _deviceInfo = parseInfo(text);
+      await _readInfo();
     } catch (_) {
       // keep what we had, the next connect reads it again
-      return;
     }
+  }
+
+  /// the scale tab's "test connection": GET_STATUS there and back, then the
+  /// info text read again. returns how long the scale took to answer
+  Future<Duration> testConnection() async {
+    if (!supportsTare) {
+      throw const ScaleCommandException(
+        'Only the ColorMix scale answers a connection test.',
+      );
+    }
+    if (!isConnected) {
+      throw const ScaleCommandException('The scale isn\'t connected.');
+    }
+    final sent = clock.now();
+    final result = await _command(ControlOp.getStatus);
+    final took = clock.now().difference(sent);
+    if (result != ControlResult.ok) {
+      throw const ScaleCommandException(
+        'The scale answered but couldn\'t send its status. Switch it off '
+        'and on again.',
+      );
+    }
+    try {
+      await _readInfo();
+    } catch (_) {
+      throw const ScaleCommandException(
+        'The scale answered but its details couldn\'t be read. Try again.',
+      );
+    }
+    return took;
+  }
+
+  Future<void> _readInfo() async {
+    final text = utf8.decode(
+      await transport.read(
+        deviceId,
+        ColorMixScaleUuids.service,
+        ColorMixScaleUuids.info,
+      ),
+      allowMalformed: true,
+    );
+    _deviceInfo = parseInfo(text);
     if (!_sensorFault) _problem = calibrated ? null : _uncalibratedNote;
     notifyListeners();
   }
@@ -359,6 +397,7 @@ class BleScaleDevice extends ChangeNotifier implements ScaleDevice {
     }
 
     _lastSeq = null;
+    _missedFrames = 0;
     _sensorFault = false;
     unawaited(_weightSub?.cancel());
     _weightSub = transport.values(deviceId, weight.uuid).listen(_onEsp32Frame);
@@ -472,6 +511,7 @@ class BleScaleDevice extends ChangeNotifier implements ScaleDevice {
     // late or repeated frames never move the reading backwards
     final last = _lastSeq;
     if (last != null && !isNewerSequence(last, frame.sequence)) return;
+    if (last != null) _missedFrames += ((frame.sequence - last) & 0xFFFF) - 1;
     _lastSeq = frame.sequence;
 
     if (frame.sensorFault != _sensorFault) {

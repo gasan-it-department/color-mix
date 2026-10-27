@@ -36,16 +36,19 @@ Weight in the middle, wait for steady, read the net grams (`w`). Three times eac
 
 ## 4. Noise
 
-Platform empty, `w` on for 30 s.
+Platform empty and still, nothing connected over BLE: serial `n 30` (30 s of readings).
 
-- biggest swing between readings: ______ g
-- `s` spread while steady: ______ g
+- swing (biggest minus smallest): ______ g  sd: ______ g
+
+Then the same from the phone: Scale tab, Scale check, Show, Measure noise (10 s, connected over BLE the whole time). It does the same sums as `n` and says straight away whether the app's steady threshold and tolerance suit the scale.
+
+- swing: ______ g  sd: ______ g  steady verdict: ______  tolerance verdict: ______
 
 The app's "steady" threshold (0.2 g over 0.8 s) should sit a bit above the swing. The on-target tolerance (0.3 g) should be at least twice it.
 
 ## 5. Drift
 
-Tare, leave the platform empty.
+Tare, leave the platform empty. `n 1800` runs for 30 minutes and prints the drift (last ten readings against the first ten) at the end. Or read it by hand:
 
 | After | Reading (g) |
 |---|---|
@@ -74,8 +77,16 @@ More than about 0.5 g between them means the cell mounting or the platform needs
 
 App (or nRF Connect) connected and receiving the whole time.
 
-- [ ] noise from step 4 isn't worse while connected
+- [ ] noise from step 4 isn't worse while connected (the app's swing against `n`'s)
+- [ ] Scale check: Test connection answers, about 10 readings a second, missed frames stay at 0 or close over a few minutes with the phone a metre away
+- [ ] the same with the phone across the room, note where readings start going missing: ______
 - [ ] unplug and replug the scale while the app's weighing screen is open: the app says disconnected, Reconnect picks it up again once the scale is advertising, and the session carries on
+
+## 8. The whole scenario
+
+The blueprint's 16 steps on this scale: [test_procedure.md](test_procedure.md) section 3.
+
+- [ ] done, date: ______  final total vs the sum of the steps: ______ g
 
 ## Result
 

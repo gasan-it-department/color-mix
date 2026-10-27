@@ -75,7 +75,10 @@ class WeighingController extends AsyncNotifier<WeighingState> {
 
     _listenTo(scale.device);
     ref.listen<ScaleStatus>(scaleProvider, (prev, next) {
-      if (prev?.device != next.device) _listenTo(next.device);
+      if (prev?.device != next.device) {
+        _listenTo(next.device);
+        _onDevice(next.device);
+      }
       _onConnection(next.connection);
     });
     _staleTimer = Timer.periodic(
@@ -121,6 +124,23 @@ class WeighingController extends AsyncNotifier<WeighingState> {
     if (ref.read(settingsProvider).autoAdvance && next.canConfirm) {
       unawaited(confirmStep());
     }
+  }
+
+  /// a different scale mid-session: the screen and the record say which one
+  /// was really used
+  void _onDevice(ScaleDevice? device) {
+    final s = _now;
+    if (s == null || s.finished || device == null) return;
+    _set(s.withDevice(device.info.name));
+    unawaited(
+      ref
+          .read(sessionRepositoryProvider)
+          .setScale(
+            s.sessionId,
+            scaleId: device.info.id,
+            scaleName: device.info.name,
+          ),
+    );
   }
 
   void _onConnection(ScaleConnectionState c) {

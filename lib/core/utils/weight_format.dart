@@ -9,6 +9,8 @@ String formatDecigrams(int dg, {bool unit = true}) {
 /// rounds half away from zero to the nearest 0.1 g
 int milligramsToDecigrams(int mg) {
   final abs = (mg.abs() + 50) ~/ 100;
+  // on web ints are js numbers, and -0 prints as "-0.0"
+  if (abs == 0) return 0;
   return mg < 0 ? -abs : abs;
 }
 

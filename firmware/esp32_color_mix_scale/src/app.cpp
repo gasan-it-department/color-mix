@@ -47,6 +47,7 @@ void App::loop() {
 
   if (scale_.poll(now)) onSample(now);
   if (scale_.captureReady()) finishCalibration();
+  if (noiseRunning_ && now - noiseStartMs_ >= noiseMs_) finishNoiseCheck();
   runBleCommands();
   menu_.poll(*this);
 
@@ -63,6 +64,7 @@ void App::loop() {
 // ── frames ─────────────────────────────────────────────────
 
 void App::onSample(uint32_t nowMs) {
+  if (noiseRunning_) noise_.push(scale_.netMg());
   if (streamRaw_) {
     Serial.printf("raw %ld  median %ld\n", static_cast<long>(scale_.lastRaw()),
                   static_cast<long>(scale_.smoothedRaw()));
@@ -284,6 +286,34 @@ void App::toggleRawStream() {
   Serial.printf("raw stream %s\n", streamRaw_ ? "on" : "off");
 }
 
+// ── noise check ────────────────────────────────────────────
+
+void App::startNoiseCheck(uint32_t seconds) {
+  noise_.reset();
+  noiseStartMs_ = millis();
+  noiseMs_ = seconds * 1000;
+  noiseRunning_ = true;
+  Serial.printf("[noise] measuring for %lu s, keep the platform still...\n",
+                static_cast<unsigned long>(seconds));
+}
+
+void App::finishNoiseCheck() {
+  noiseRunning_ = false;
+  if (noise_.count() < 2) {
+    Serial.println("[noise] not enough samples, is the hx711 answering? (s)");
+    return;
+  }
+  Serial.printf("[noise] %lu samples over %lu s\n",
+                static_cast<unsigned long>(noise_.count()),
+                static_cast<unsigned long>(noiseMs_ / 1000));
+  Serial.printf("[noise] mean %.3f g  min %.3f g  max %.3f g\n",
+                noise_.meanMg() / 1000.0, grams(noise_.minMg()),
+                grams(noise_.maxMg()));
+  Serial.printf("[noise] swing %.3f g  sd %.3f g  drift %+.3f g\n",
+                grams(noise_.swingMg()), noise_.stdDevMg() / 1000.0,
+                noise_.driftMg() / 1000.0);
+}
+
 void App::printStatus(Print& out) {
   const uint32_t now = millis();
   const Calibration& cal = scale_.calibration();
@@ -315,5 +345,6 @@ void App::printHelp(Print& out) const {
       "  c          cancel a calibration step\n"
       "  f <n>      set counts per gram by hand\n"
       "  x          clear calibration\n"
+      "  n [secs]   noise check, default 10 s, e.g. n 300 for drift\n"
       "  h          this help");
 }

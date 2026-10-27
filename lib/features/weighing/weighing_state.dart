@@ -307,6 +307,10 @@ class WeighingState {
     );
   }
 
+  /// a scale connected after the session started (it began with none, or
+  /// the last scale was connected from the banner)
+  WeighingState withDevice(String name) => _copy(deviceName: name);
+
   WeighingState markStale() => _copy(stale: true, stable: false);
 
   /// first steady reading after a reconnect: did anything move?
@@ -325,6 +329,7 @@ class WeighingState {
     WeighPhase? phase,
     int? stepIndex,
     ScaleConnectionState? connection,
+    String? deviceName,
     int? zeroMg,
     Object? liveMg = _keep,
     bool? stable,
@@ -340,7 +345,7 @@ class WeighingState {
       steps: steps,
       records: records ?? this.records,
       toleranceMg: toleranceMg,
-      deviceName: deviceName,
+      deviceName: deviceName ?? this.deviceName,
       connection: connection ?? this.connection,
       startedAt: startedAt,
       phase: phase ?? this.phase,

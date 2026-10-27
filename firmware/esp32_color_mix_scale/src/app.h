@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 
+#include "noise.h"
 #include "scale_input.h"
 #include "serial_menu.h"
 
@@ -26,6 +27,10 @@ class App {
   void toggleWeightStream();
   void toggleRawStream();
 
+  // collects net readings for [seconds], then prints mean, swing, standard
+  // deviation and drift. frames keep going meanwhile
+  void startNoiseCheck(uint32_t seconds);
+
   void printStatus(Print& out);
   void printHelp(Print& out) const;
 
@@ -39,6 +44,7 @@ class App {
   void finishCalibration();
   void applyCalibration(const Calibration& cal);
   void refreshInfo();
+  void finishNoiseCheck();
   void done(Source src, uint8_t op, uint8_t result, const char* message);
 
   ScaleInput scale_;
@@ -54,6 +60,11 @@ class App {
   int32_t calKnownMg_ = 0;
   // the known-mass step needs a zero from this power-up, not an old one
   bool zeroedThisBoot_ = false;
+
+  NoiseStats noise_;
+  bool noiseRunning_ = false;
+  uint32_t noiseStartMs_ = 0;
+  uint32_t noiseMs_ = 0;
 
   char info_[64] = {};
 };

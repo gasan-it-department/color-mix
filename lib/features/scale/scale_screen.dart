@@ -13,6 +13,7 @@ import 'package:colormix_studio/core/widgets/app_page.dart';
 import 'package:colormix_studio/core/widgets/connection_chip.dart';
 import 'package:colormix_studio/core/widgets/section_card.dart';
 import 'package:colormix_studio/features/scale/ble_scan.dart';
+import 'package:colormix_studio/features/scale/widgets/scale_check.dart';
 import 'package:colormix_studio/features/scale/widgets/simulator_panel.dart';
 import 'package:colormix_studio/features/settings/settings_providers.dart';
 import 'package:colormix_studio/shared/models/scale_device_info.dart';
@@ -24,6 +25,7 @@ class ScaleScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sim = ref.watch(simulatedScaleProvider);
+    final device = ref.watch(scaleProvider.select((s) => s.device));
 
     return AppPage(
       title: 'Scale',
@@ -36,6 +38,10 @@ class ScaleScreen extends ConsumerWidget {
           if (sim != null) ...[
             const SizedBox(height: 12),
             SimulatorPanel(scale: sim),
+          ],
+          if (device != null) ...[
+            const SizedBox(height: 12),
+            ScaleCheck(device: device),
           ],
         ],
       ),

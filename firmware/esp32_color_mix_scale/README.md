@@ -73,6 +73,7 @@ pio test -e native
 | `c` | cancel a calibration step |
 | `f <n>` | set counts per gram by hand |
 | `x` | clear the calibration |
+| `n [secs]` | noise check, 10 s unless you say: mean, min, max, swing, standard deviation and drift of the net reading. `n 1800` for a half-hour drift test. Frames keep going meanwhile |
 | `h` | help |
 
 ## Calibration
@@ -82,7 +83,7 @@ Needs a known weight of at least 10 g. 200 g or more is better, a 500 g kitchen-
 1. Power up, let it warm up for a few minutes (the cell drifts while it warms)
 2. Platform empty, wait for `s` to say steady, then `z`. It averages 2 s and saves the zero
 3. Put the reference weight in the middle of the platform, wait for steady, then `k 200` (its real mass in grams). It averages 2 s, works out the counts per gram and saves it
-4. Check with one or two other weights (`w` to watch the reading). See [../../docs/hardware_test.md](../../docs/hardware_test.md) for the full check
+4. Check with one or two other weights (`w` to watch the reading), and `n` with the platform still to see how noisy it is. See [../../docs/hardware_test.md](../../docs/hardware_test.md) for the full check
 5. `x` and start again if it's off
 
 The same two steps work over BLE (CAL_ZERO, CAL_KNOWN_MASS), that's what the app's calibration screen does: Scale tab, Calibrate. It walks through both steps and then checks the reading against known weights.
@@ -108,6 +109,7 @@ lib/scale_core/         no arduino in here, tested on the pc
   protocol.*            frames, control commands, replies, info text
   filter.*              median of 5, steady window
   calibration.*         raw counts -> mg, factor from a known weight
+  noise.*               numbers for `n`: mean, swing, sd, drift, no heap
 src/
   scale_input.*         hx711 sampling without blocking, tare, averaging
   cal_store.*           calibration in nvs (Preferences)

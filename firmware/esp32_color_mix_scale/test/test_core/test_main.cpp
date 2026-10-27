@@ -9,6 +9,7 @@
 
 #include "calibration.h"
 #include "filter.h"
+#include "noise.h"
 #include "protocol.h"
 
 void setUp() {}
@@ -117,6 +118,35 @@ void test_rails() {
   TEST_ASSERT_FALSE(isRawAtRail(123456));
 }
 
+void test_noise_stats() {
+  NoiseStats n;
+  TEST_ASSERT_EQUAL_INT32(0, n.swingMg());
+
+  // a steady reading: nothing moves
+  for (int i = 0; i < 25; i++) n.push(5);
+  TEST_ASSERT_EQUAL_UINT32(25, n.count());
+  TEST_ASSERT_EQUAL_INT32(0, n.swingMg());
+  TEST_ASSERT_FLOAT_WITHIN(1e-9, 0.0, n.stdDevMg());
+  TEST_ASSERT_FLOAT_WITHIN(1e-9, 0.0, n.driftMg());
+
+  // a slow creep from 0 to 290 mg
+  n.reset();
+  for (int i = 0; i < 30; i++) n.push(i * 10);
+  TEST_ASSERT_EQUAL_INT32(0, n.minMg());
+  TEST_ASSERT_EQUAL_INT32(290, n.maxMg());
+  TEST_ASSERT_EQUAL_INT32(290, n.swingMg());
+  TEST_ASSERT_FLOAT_WITHIN(1e-6, 145.0, n.meanMg());
+  // sample sd of an arithmetic run: step * sqrt(n(n+1)/12)
+  TEST_ASSERT_FLOAT_WITHIN(0.01, 88.03, n.stdDevMg());
+  // last ten average 245, first ten 45
+  TEST_ASSERT_FLOAT_WITHIN(1e-6, 200.0, n.driftMg());
+
+  // too short to tell drift from noise
+  n.reset();
+  for (int i = 0; i < 15; i++) n.push(i * 100);
+  TEST_ASSERT_FLOAT_WITHIN(1e-9, 0.0, n.driftMg());
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_weight_frame_vectors);
@@ -127,5 +157,6 @@ int main() {
   RUN_TEST(test_raw_to_milligrams);
   RUN_TEST(test_factor_from_known_mass);
   RUN_TEST(test_rails);
+  RUN_TEST(test_noise_stats);
   return UNITY_END();
 }

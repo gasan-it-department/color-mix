@@ -12,6 +12,7 @@ import 'package:colormix_studio/core/widgets/confirm_sheet.dart';
 import 'package:colormix_studio/core/widgets/connection_chip.dart';
 import 'package:colormix_studio/core/widgets/empty_state.dart';
 import 'package:colormix_studio/features/scale/widgets/simulator_panel.dart';
+import 'package:colormix_studio/features/settings/settings_providers.dart';
 import 'package:colormix_studio/features/weighing/weighing_controller.dart';
 import 'package:colormix_studio/features/weighing/weighing_state.dart';
 import 'package:colormix_studio/features/weighing/widgets/weighing_bits.dart';
@@ -197,16 +198,22 @@ class _WeighingView extends ConsumerWidget {
           message:
               'Readings are paused and your progress is kept. Reconnect '
               'to carry on.',
-          // no device at all (forgotten, or opened by link): offer the
-          // simulator. TODO: phase 6 sends this to the scale screen
-          action: ref.read(scaleProvider).device == null
+          // no device at all (forgotten, or opened by link): the last scale
+          // if there is one, else the simulator. leaving for the scale tab
+          // would end the session, so it's not offered here
+          action: ref.read(scaleProvider).device != null
               ? FilledButton.tonal(
-                  onPressed: scale.useSimulator,
-                  child: const Text('Use simulated scale'),
-                )
-              : FilledButton.tonal(
                   onPressed: scale.reconnect,
                   child: const Text('Reconnect'),
+                )
+              : ref.read(settingsProvider).lastScaleId != null
+              ? FilledButton.tonal(
+                  onPressed: scale.connectLast,
+                  child: const Text('Connect last scale'),
+                )
+              : FilledButton.tonal(
+                  onPressed: scale.useSimulator,
+                  child: const Text('Use simulated scale'),
                 ),
         )
       else if (s.stale)

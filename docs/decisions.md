@@ -106,6 +106,17 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 - A brand-new formula's editor makes its seed with a fresh id on every route rebuild, and coming back from weighing rebuilds it. The editor holds on to the seed it opened with. Before that, saving again after weighing made a second copy of the formula.
 - Snackbars with an action stay up until tapped in this Flutter. "Formula saved · View all" and "Copied · Open" are only shortcuts, so they time out like the rest.
 
+## Integration (phase 8)
+
+- The blueprint's section 19 scenario is a test (`test/e2e_rose_gold_test.dart`), all 16 steps through the real screens from an empty install: once on the simulated scale on a 360 px phone, once on the ColorMix scale over the fake radio on a desktop. The fake scale sits on a "bench" that sends a frame every 100 ms like the firmware and pours at about 10 g a second. Colour C goes in 0.2 g over on purpose, so the developer's target carries it through to 120.2 g and the review has a deviation to show.
+- Widget tests rather than `integration_test` on a device: they run on the PC in seconds with fake time and can't flake on Bluetooth. The phone run of the same steps is by hand, `docs/test_procedure.md`. No emulator on this PC, and the emulator has no Bluetooth anyway.
+- Scale check on the Scale tab, folded away: readings a second, missed frames (sequence gaps) and unreadable ones, Test connection (GET_STATUS round trip, info read again, the blueprint's "test connection"), and a 10 s noise measurement. The noise result is judged against the app's own settings with the hardware sheet's rules: the swing under the steady threshold, the tolerance at least twice the swing, drift over 0.1 g in 10 s flagged.
+- Serial `n [secs]` in the firmware does the same sums with no BLE in the way: mean, swing, sample standard deviation (Welford, so `n 1800` doesn't lose precision), drift as the last ten readings against the first ten. Pure code in `lib/scale_core/noise.*`, tested on the PC, and the app's `ReadingStats` takes the same test vectors so the two can be compared on the sheet.
+- Found running it: a weighing opened with no scale (a link, or a forgotten scale) kept calling itself "No scale" after one connected, and the session recorded scale "none". The session now takes whichever scale is really weighing. The disconnected banner offers the last scale before the simulator, it can't send you to the Scale tab without ending the session.
+- Found running it by hand: the progress percent was worked out from the raw milligrams while the big number is rounded to 0.1 g, so 30.0 g could say 100.1% and an empty step 0.1%. The percent now follows the grams on show. The bar still uses the raw value, nobody reads a bar to a tenth.
+- Also only on web: Dart ints are JavaScript numbers there, so rounding -40 mg gave -0 and printed "-0.0%". `milligramsToDecigrams` returns a plain 0 now. The VM tests can't see it. I checked it by compiling a two-line script against `weight_format.dart` with `dart compile js` and running it in Node. `flutter test --platform chrome` hung here with Edge standing in for Chrome.
+- `pubspec.yaml` lost the template comments and the unused cupertino_icons, and its version follows the app's (0.1.0).
+
 ## Firmware (phase 5)
 
 - `firmware/esp32_color_mix_scale`, PlatformIO, Arduino core 3.3 through the official espressif32 v8 platform. Details and wiring in its README.

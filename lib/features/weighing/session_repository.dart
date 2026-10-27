@@ -94,6 +94,19 @@ class SessionRepository {
     );
   }
 
+  /// the scale changed mid-session, keep the one that did the weighing
+  Future<void> setScale(
+    String sessionId, {
+    required String scaleId,
+    required String scaleName,
+  }) => (_db.update(_db.weighingSessions)..where((x) => x.id.equals(sessionId)))
+      .write(
+        WeighingSessionsCompanion(
+          scaleId: Value(scaleId),
+          scaleName: Value(scaleName),
+        ),
+      );
+
   Future<WeighingSessionRow?> find(String id) => (_db.select(
     _db.weighingSessions,
   )..where((x) => x.id.equals(id))).getSingleOrNull();

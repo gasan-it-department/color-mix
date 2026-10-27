@@ -77,6 +77,18 @@ void SerialMenu::run(App& app, char* line) {
     case 'x':
       app.clearCalibration();
       break;
+    case 'n': {
+      char* end = nullptr;
+      const long secs = std::strtol(arg, &end, 10);
+      if (end == arg) {
+        app.startNoiseCheck(10);
+      } else if (secs < 1 || secs > 3600) {
+        Serial.println("usage: n [seconds], 1 to 3600, e.g. n 30");
+      } else {
+        app.startNoiseCheck(static_cast<uint32_t>(secs));
+      }
+      break;
+    }
     default:
       Serial.printf("unknown '%s', h for help\n", line);
   }

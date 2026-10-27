@@ -19,6 +19,14 @@ void main() {
     expect(formatMilligrams(30000), '30.0 g');
   });
 
+  test('a hair under zero rounds to a plain zero', () {
+    // the web build's ints are js numbers, a -0 there printed as -0.0%.
+    // the vm can't show it, docs/decisions.md says how it was checked
+    expect(milligramsToDecigrams(-40), 0);
+    expect(milligramsToDecigrams(-40).isNegative, isFalse);
+    expect(formatMilligrams(-40), '0.0 g');
+  });
+
   test('percentages drop needless zeros', () {
     expect(formatPercentHundredths(5000), '50%');
     expect(formatPercentHundredths(3330), '33.3%');

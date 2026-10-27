@@ -199,6 +199,61 @@ void main() {
     });
   });
 
+  group('scale check', () {
+    test('missed frames count the gaps, wrap included', () async {
+      final p = fakeEsp32();
+      final scale = deviceFor(p);
+      await scale.connect();
+
+      for (final seq in [0xFFF0, 0xFFF1, 0xFFF4, 0xFFFF, 2, 1]) {
+        radio.sendFrame(p.id, mg: 0, seq: seq);
+      }
+      await settle();
+      // F2 F3, then F5..FE, then 0 and 1 across the wrap. the late 1 at the
+      // end is dropped, not counted
+      expect(scale.missedFrames, 2 + 10 + 2);
+
+      // a fresh connection starts counting again
+      radio.dropLink(p.id);
+      await settle(60);
+      expect(scale.missedFrames, 0);
+    });
+
+    test('test connection times GET_STATUS and reads the info', () async {
+      final p = fakeEsp32(info: 'fw=0.1.0;proto=1;cap_g=1000;cal=0');
+      final scale = deviceFor(p);
+      await scale.connect();
+      p.info = 'fw=0.1.1;proto=1;cap_g=1000;cal=1';
+
+      final took = await scale.testConnection();
+      expect(took, lessThan(const Duration(seconds: 1)));
+      expect(radio.writes.last, [ControlOp.getStatus]);
+      expect(scale.deviceInfo['fw'], '0.1.1');
+      expect(scale.calibrated, isTrue);
+
+      p.answersControl = false;
+      await expectLater(
+        scale.testConnection(),
+        throwsA(
+          isA<ScaleCommandException>().having(
+            (e) => e.message,
+            'message',
+            contains('didn\'t answer'),
+          ),
+        ),
+      );
+    });
+
+    test('only the ColorMix scale takes a connection test', () async {
+      final standard = deviceFor(fakeWeightScale());
+      await standard.connect();
+      await expectLater(
+        standard.testConnection(),
+        throwsA(isA<ScaleCommandException>()),
+      );
+    });
+  });
+
   group('calibration', () {
     Matcher fails(String text) => throwsA(
       isA<ScaleCommandException>().having(

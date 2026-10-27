@@ -146,6 +146,11 @@ class PourPanel extends StatelessWidget {
     final added = s.addedMg;
     final remaining = s.remainingMg;
     final progress = s.progress;
+    // the percent follows the grams on show, so 30.0 g of 30.0 g never
+    // reads 100.1% because of a few milligrams of noise
+    final shownPercent = added == null
+        ? null
+        : milligramsToDecigrams(added) * 100 * 100 / s.targetAddedMg;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -220,10 +225,11 @@ class PourPanel extends StatelessWidget {
               ),
               _Stat(
                 label: 'Progress',
-                value: progress == null || !s.live
+                value: shownPercent == null || !s.live
                     ? '—'
-                    // noise can dip a hair under zero, don't show -0.0%
-                    : '${(progress < 0 ? 0 : progress * 100).toStringAsFixed(1)}%',
+                    // noise can dip a hair under zero, don't show -0.0%.
+                    // <= catches the web's -0.0 too
+                    : '${(shownPercent <= 0 ? 0 : shownPercent).toStringAsFixed(1)}%',
               ),
               _Stat(
                 label: 'On the scale',
