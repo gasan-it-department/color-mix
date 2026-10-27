@@ -1,6 +1,10 @@
 // weights are whole decigrams (0.1 g) and percentages whole hundredths of a
 // percent (10000 = 100%) so the maths stays exact
 
+import 'package:colormix_studio/shared/models/product_form.dart';
+
+export 'package:colormix_studio/shared/models/product_form.dart';
+
 /// developer parts per one part dye, by weight. 150 = 1:1.5
 class DeveloperRatio {
   const DeveloperRatio(this.hundredths) : assert(hundredths > 0);
@@ -41,6 +45,7 @@ class FormulaIngredient {
     required this.percentHundredths,
     required this.requiredDg,
     required this.displayRgb,
+    this.form = ProductForm.cream,
   });
 
   final String id;
@@ -53,11 +58,15 @@ class FormulaIngredient {
   /// swatch colour for the ui only, 0xRRGGBB
   final int displayRgb;
 
+  /// cream, liquid or powder: how it pours, still weighed in grams
+  final ProductForm form;
+
   FormulaIngredient copyWith({
     String? name,
     int? percentHundredths,
     int? requiredDg,
     int? displayRgb,
+    ProductForm? form,
   }) {
     return FormulaIngredient(
       id: id,
@@ -65,6 +74,7 @@ class FormulaIngredient {
       percentHundredths: percentHundredths ?? this.percentHundredths,
       requiredDg: requiredDg ?? this.requiredDg,
       displayRgb: displayRgb ?? this.displayRgb,
+      form: form ?? this.form,
     );
   }
 }
@@ -84,6 +94,7 @@ class ColorFormula {
     this.isDemo = false,
     this.developerRatio,
     this.developerVolume,
+    this.developerForm = ProductForm.cream,
     this.notes,
   });
 
@@ -102,6 +113,9 @@ class ColorFormula {
 
   /// 10/20/30/40 vol as printed on the bottle, recorded only
   final int? developerVolume;
+
+  /// cream or liquid developer, for the pour hints
+  final ProductForm developerForm;
   final int developerDg;
   final int totalMixtureDg;
   final String? notes;
@@ -117,6 +131,7 @@ class ColorFormula {
     int? totalDyeDg,
     DeveloperRatio? Function()? developerRatio,
     int? Function()? developerVolume,
+    ProductForm? developerForm,
     int? developerDg,
     int? totalMixtureDg,
     String? Function()? notes,
@@ -137,6 +152,7 @@ class ColorFormula {
       developerVolume: developerVolume != null
           ? developerVolume()
           : this.developerVolume,
+      developerForm: developerForm ?? this.developerForm,
       developerDg: developerDg ?? this.developerDg,
       totalMixtureDg: totalMixtureDg ?? this.totalMixtureDg,
       notes: notes != null ? notes() : this.notes,

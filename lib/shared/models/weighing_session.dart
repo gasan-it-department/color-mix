@@ -1,3 +1,5 @@
+import 'package:colormix_studio/shared/models/product_form.dart';
+
 enum SessionStatus { inProgress, completed, cancelled, interrupted }
 
 /// one ingredient poured during a session. targets are copied from the
@@ -12,6 +14,7 @@ class WeighingStep {
     required this.targetAddedDg,
     required this.targetCumulativeDg,
     this.isDeveloper = false,
+    this.form = ProductForm.cream,
     this.actualCumulativeMg,
     this.actualAddedMg,
     this.confirmedStable,
@@ -23,6 +26,7 @@ class WeighingStep {
   final String ingredientName;
   final int displayRgb;
   final bool isDeveloper;
+  final ProductForm form;
   final int targetAddedDg;
   final int targetCumulativeDg;
   final int? actualCumulativeMg;

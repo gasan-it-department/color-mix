@@ -100,6 +100,7 @@ class _Part {
     required this.displayRgb,
     String name = '',
     String percent = '',
+    this.form = ProductForm.cream,
   }) : name = TextEditingController(text: name),
        percent = TextEditingController(text: percent);
 
@@ -107,6 +108,7 @@ class _Part {
   final int displayRgb;
   final TextEditingController name;
   final TextEditingController percent;
+  ProductForm form;
 
   void dispose() {
     name.dispose();
@@ -141,6 +143,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
   late DeveloperMode _devMode;
   int? _presetRatio;
   int? _volume;
+  ProductForm _devForm = ProductForm.cream;
   bool _saved = false;
   bool _dirty = false;
   bool _saving = false;
@@ -184,6 +187,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
             percent: p.percentHundredths == null
                 ? ''
                 : percentText(p.percentHundredths!),
+            form: p.form,
           ),
       ]);
     _devMode = s.developerMode;
@@ -195,6 +199,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
         ? ratioText(s.ratioHundredths!)
         : '';
     _volume = s.developerVolume;
+    _devForm = s.developerForm;
     _dirty = false;
   }
 
@@ -303,6 +308,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
             percentHundredths: r.percents[i]!,
             requiredDg: r.weights![i],
             displayRgb: p.displayRgb,
+            form: p.form,
           ),
       ],
       totalDyeDg: r.dyeDg!,
@@ -310,6 +316,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
           ? null
           : DeveloperRatio(r.ratioHundredths!),
       developerVolume: _devMode == DeveloperMode.none ? null : _volume,
+      developerForm: _devForm,
       developerDg: r.developerDg!,
       totalMixtureDg: r.mixtureDg!,
       notes: _notes.text.trim().isEmpty ? null : _notes.text.trim(),
@@ -429,6 +436,11 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
         presetRatio: _presetRatio,
         customController: _customRatio,
         volume: _volume,
+        form: _devForm,
+        onForm: (f) {
+          _devForm = f;
+          _changed();
+        },
         error: r.errorFor(IssueField.developer),
         onMode: (m) {
           _devMode = m;
@@ -720,6 +732,11 @@ class _ColorsCard extends StatelessWidget {
               nameError: r.errorFor(IssueField.partName, part: i),
               percentError: r.errorFor(IssueField.partPercent, part: i),
               onRemove: parts.length > 1 ? () => onRemove(i) : null,
+              form: p.form,
+              onForm: (f) {
+                p.form = f;
+                onChanged();
+              },
             ),
           ],
           const SizedBox(height: 12),

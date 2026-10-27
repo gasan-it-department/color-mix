@@ -93,8 +93,16 @@ class _StartSheetState extends ConsumerState<_StartSheet> {
                     SizedBox(width: 20, child: Text('${i + 1}', style: muted)),
                     ColorSwatchDot(rgb: step.rgb, size: 18),
                     const SizedBox(width: 10),
+                    // the form on its own line, a phone has no room beside
+                    // the name and the two amounts
                     Expanded(
-                      child: Text(step.name, style: theme.textTheme.bodyMedium),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(step.name, style: theme.textTheme.bodyMedium),
+                          Text(step.form.label, style: muted),
+                        ],
+                      ),
                     ),
                     Text(
                       'add ${formatMilligrams(step.targetAddedMg)}',

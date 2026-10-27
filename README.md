@@ -9,8 +9,8 @@ Demo formulas are examples only, not product-validated. The color on screen is a
 ## What's in it
 
 - **Color Studio**: demo palette (labelled as demo), custom colors by picker, hex or RGB, the nearest demo shade for a custom color
-- **Formula**: 1 to 3 colors by percentage, developer by weight ratio, exact gram amounts that always add up, plain messages for anything that doesn't
-- **Weighing**: zero once with the bowl on, then each ingredient poured to a cumulative target. Live reading, remaining, progress, steady or not, amber close, green on target, red over. Overshoot is shown and recorded, never "fixed" by changing the other amounts
+- **Formula**: 1 to 3 colors by percentage, developer by weight ratio, exact gram amounts that always add up, plain messages for anything that doesn't. Each color and the developer is marked cream, liquid or powder
+- **Weighing**: zero once with the bowl on, then each ingredient poured to a cumulative target. Live reading, remaining, progress, steady or not, amber close, green on target, red over. A liquid turns amber sooner than a cream, and each form gets its own pouring hint. Overshoot is shown and recorded, never "fixed" by changing the other amounts
 - **Scale**: the ColorMix scale over BLE, or a simulated scale that runs everything without hardware. Calibration wizard and a scale check (connection test, noise)
 - **Saved**: formulas with search, duplicate, delete, and every weighing session with what was really poured
 - **Settings**: theme, sounds, move on by itself, tolerance, steadiness, starting dye amount
@@ -91,6 +91,7 @@ A standard Bluetooth weight scale (0x181D) connects too but is marked experiment
 - **Temperature drift isn't compensated**, re-zero or recalibrate after moving the scale somewhere warmer or colder
 - **No backup or sync.** Formulas and sessions live on the device only. Uninstalling the app loses them
 - Developer ratio and volume are recorded as entered, the app doesn't check them against any product
+- **Grams only.** A product whose instructions are in mL has to be converted by its maker's numbers, the app doesn't know densities. The slow-down bands for liquid and powder are first guesses
 
 ## Layout
 

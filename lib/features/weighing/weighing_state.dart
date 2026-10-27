@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:colormix_studio/core/bluetooth/scale_device.dart';
 import 'package:colormix_studio/shared/models/color_formula.dart';
 
@@ -45,12 +43,16 @@ class StepPlan {
     required this.rgb,
     required this.targetAddedMg,
     this.isDeveloper = false,
+    this.form = ProductForm.cream,
   });
 
   final String name;
   final int rgb;
   final int targetAddedMg;
   final bool isDeveloper;
+
+  /// sets the slow-down band and the pour hints
+  final ProductForm form;
 }
 
 class StepRecord {
@@ -76,6 +78,7 @@ List<StepPlan> stepsFor(ColorFormula f) => [
       name: i.name,
       rgb: i.displayRgb,
       targetAddedMg: i.requiredDg * 100,
+      form: i.form,
     ),
   if (f.developerDg > 0)
     StepPlan(
@@ -85,6 +88,7 @@ List<StepPlan> stepsFor(ColorFormula f) => [
       rgb: developerRgb,
       targetAddedMg: f.developerDg * 100,
       isDeveloper: true,
+      form: f.developerForm,
     ),
 ];
 
@@ -194,8 +198,9 @@ class WeighingState {
   /// 1.0 = on target, can go past
   double? get progress => addedMg == null ? null : addedMg! / targetAddedMg;
 
-  /// slow-down band before the target: a gram, or a tenth of the step
-  int get approachMg => max(1000, targetAddedMg ~/ 10);
+  /// slow-down band before the target, wider for a liquid than a cream.
+  /// see ProductForm
+  int get approachMg => step.form.approachMg(targetAddedMg);
 
   PourZone get zone {
     final remaining = remainingMg;

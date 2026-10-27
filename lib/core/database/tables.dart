@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import 'package:colormix_studio/shared/models/product_form.dart';
 import 'package:colormix_studio/shared/models/weighing_session.dart';
 
 // dg = decigrams (0.1 g), mg = milligrams, rgb = 0xRRGGBB
@@ -14,6 +15,10 @@ class Formulas extends Table {
   IntColumn get totalDyeDg => integer()();
   IntColumn get developerRatioHundredths => integer().nullable()();
   IntColumn get developerVolume => integer().nullable()();
+
+  /// v3. rows from before are cream
+  TextColumn get developerForm =>
+      textEnum<ProductForm>().withDefault(Constant(ProductForm.cream.name))();
   IntColumn get developerDg => integer().withDefault(const Constant(0))();
   IntColumn get totalMixtureDg => integer()();
   TextColumn get notes => text().nullable()();
@@ -34,6 +39,10 @@ class FormulaIngredients extends Table {
   IntColumn get percentHundredths => integer()();
   IntColumn get requiredDg => integer()();
   IntColumn get displayRgb => integer()();
+
+  /// v3. rows from before are cream
+  TextColumn get form =>
+      textEnum<ProductForm>().withDefault(Constant(ProductForm.cream.name))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -73,6 +82,10 @@ class WeighingSteps extends Table {
   TextColumn get ingredientName => text()();
   IntColumn get displayRgb => integer()();
   BoolColumn get isDeveloper => boolean().withDefault(const Constant(false))();
+
+  /// v3, copied from the formula like the targets. rows from before are cream
+  TextColumn get form =>
+      textEnum<ProductForm>().withDefault(Constant(ProductForm.cream.name))();
   IntColumn get targetAddedDg => integer()();
   IntColumn get targetCumulativeDg => integer()();
   IntColumn get actualCumulativeMg => integer().nullable()();

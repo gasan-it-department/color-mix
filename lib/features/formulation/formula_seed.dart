@@ -21,6 +21,7 @@ class SeedPart {
     required this.name,
     required this.displayRgb,
     this.percentHundredths,
+    this.form = ProductForm.cream,
   });
 
   final String id;
@@ -29,6 +30,7 @@ class SeedPart {
 
   /// null leaves the field empty
   final int? percentHundredths;
+  final ProductForm form;
 }
 
 /// what the editor starts from: a new formula for the picked color (from its
@@ -47,6 +49,7 @@ class FormulaSeed {
     this.isDemo = false,
     this.ratioHundredths,
     this.developerVolume,
+    this.developerForm = ProductForm.cream,
     this.notes = '',
     this.createdAt,
   });
@@ -63,6 +66,7 @@ class FormulaSeed {
   final DeveloperMode developerMode;
   final int? ratioHundredths;
   final int? developerVolume;
+  final ProductForm developerForm;
   final String notes;
   final DateTime? createdAt;
 
@@ -138,11 +142,13 @@ class FormulaSeed {
             name: i.name,
             displayRgb: i.displayRgb,
             percentHundredths: i.percentHundredths,
+            form: i.form,
           ),
       ],
       developerMode: _modeFor(ratio),
       ratioHundredths: ratio,
       developerVolume: f.developerVolume,
+      developerForm: f.developerForm,
       notes: f.notes ?? '',
       createdAt: f.createdAt,
     );

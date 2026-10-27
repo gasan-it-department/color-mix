@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
 import 'package:colormix_studio/features/weighing/weighing_state.dart';
+import 'package:colormix_studio/shared/models/product_form.dart';
 import 'package:colormix_studio/shared/models/weighing_session.dart';
 import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
 import 'package:colormix_studio/shared/widgets/label_tag.dart';
@@ -152,6 +153,7 @@ class StatusBanner extends StatelessWidget {
 typedef DeviationRow = ({
   String name,
   int rgb,
+  ProductForm form,
   int targetMg,
   int? addedMg,
   bool movedOn,
@@ -175,6 +177,7 @@ class DeviationTable extends StatelessWidget {
             (
               name: step.name,
               rgb: step.rgb,
+              form: step.form,
               targetMg: step.targetAddedMg,
               addedMg: s.records[i]?.addedMg,
               movedOn: s.records[i]?.manual ?? false,
@@ -194,6 +197,7 @@ class DeviationTable extends StatelessWidget {
              (
                name: step.ingredientName,
                rgb: step.displayRgb,
+               form: step.form,
                targetMg: step.targetAddedDg * 100,
                addedMg: step.actualAddedMg,
                movedOn: step.confirmedStable == false,
@@ -234,6 +238,12 @@ class DeviationTable extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          row.form.label,
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         if (row.movedOn) ...[
           const SizedBox(width: 6),

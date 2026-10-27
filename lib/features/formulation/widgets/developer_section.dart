@@ -19,6 +19,8 @@ class DeveloperSection extends StatelessWidget {
     required this.onPreset,
     required this.onCustomChanged,
     required this.onVolume,
+    required this.form,
+    required this.onForm,
     this.error,
   });
 
@@ -30,6 +32,10 @@ class DeveloperSection extends StatelessWidget {
   final ValueChanged<int> onPreset;
   final VoidCallback onCustomChanged;
   final ValueChanged<int?> onVolume;
+
+  /// cream or liquid, sets the pour hints when weighing
+  final ProductForm form;
+  final ValueChanged<ProductForm> onForm;
   final String? error;
 
   @override
@@ -118,6 +124,21 @@ class DeveloperSection extends StatelessWidget {
                     label: Text('$v vol'),
                     selected: volume == v,
                     onSelected: (_) => onVolume(v),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text('Form', style: muted),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final f in ProductForm.developerForms)
+                  ChoiceChip(
+                    label: Text(f.label),
+                    selected: form == f,
+                    onSelected: (_) => onForm(f),
                   ),
               ],
             ),

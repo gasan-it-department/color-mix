@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import 'package:colormix_studio/core/database/tables.dart';
+import 'package:colormix_studio/shared/models/product_form.dart';
 import 'package:colormix_studio/shared/models/weighing_session.dart';
 
 part 'app_database.g.dart';
@@ -20,7 +21,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -28,6 +29,13 @@ class AppDatabase extends _$AppDatabase {
       // v2: sessions keep the tolerance they were weighed with
       if (from < 2) {
         await m.addColumn(weighingSessions, weighingSessions.toleranceMg);
+      }
+      // v3: cream / liquid / powder on ingredients, the developer and the
+      // session steps. everything saved before is cream
+      if (from < 3) {
+        await m.addColumn(formulaIngredients, formulaIngredients.form);
+        await m.addColumn(formulas, formulas.developerForm);
+        await m.addColumn(weighingSteps, weighingSteps.form);
       }
     },
     beforeOpen: (details) async {

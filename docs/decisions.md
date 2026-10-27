@@ -117,6 +117,17 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 - Also only on web: Dart ints are JavaScript numbers there, so rounding -40 mg gave -0 and printed "-0.0%". `milligramsToDecigrams` returns a plain 0 now. The VM tests can't see it. I checked it by compiling a two-line script against `weight_format.dart` with `dart compile js` and running it in Node. `flutter test --platform chrome` hung here with Edge standing in for Chrome.
 - `pubspec.yaml` lost the template comments and the unused cupertino_icons, and its version follows the app's (0.1.0).
 
+## Product form (after phase 8)
+
+- Each color and the developer is a cream, a liquid or a powder (`lib/shared/models/product_form.dart`). It's recorded, it's shown, and it changes the pour guidance. It never changes an amount: everything is still weighed in grams.
+- No volume conversion. A liquid's instructions may give mL, but 1 mL isn't 1 g and the density differs per product, so the app would be guessing. The developer card already says the ratios are by weight, and the start sheet asks to confirm it.
+- The slow-down band (where the screen turns amber) depends on the form. Cream keeps what weighing always used: 1 g or a tenth of the step. Liquid runs fast and keeps dripping after you stop, so 2 g or 15%. Powder goes in by the spoonful and a spoonful can be a few grams, so 1.5 g or 10%. These are first guesses, like the tolerance, until the scale has seen real products.
+- A hint under "Keep pouring" and "Almost there" per form: squeeze, pour, spoon. Nothing once it's on target or over, the overshoot panel has its own words.
+- The developer is cream or liquid only, there's no powder developer.
+- In the editor the form is a small "Cream ▾" menu inside each color's name field. It's a property of the product, and a 360 px phone has no room for another field on the row. The developer gets chips like its ratio and strength.
+- Shown on the start sheet (under each name), as a tag on the weighing screen, and in every target / added table, history included. Sessions copy each step's form when they start, like the targets, so editing the formula later doesn't change history.
+- Schema v3 adds the three columns with cream as the default, so everything saved before reads as cream. The migration test builds real v1 and v2 databases by hand and opens them.
+
 ## Firmware (phase 5)
 
 - `firmware/esp32_color_mix_scale`, PlatformIO, Arduino core 3.3 through the official espressif32 v8 platform. Details and wiring in its README.

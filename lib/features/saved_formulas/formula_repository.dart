@@ -45,6 +45,7 @@ class FormulaRepository {
               totalDyeDg: f.totalDyeDg,
               developerRatioHundredths: Value(f.developerRatio?.hundredths),
               developerVolume: Value(f.developerVolume),
+              developerForm: Value(f.developerForm),
               developerDg: Value(f.developerDg),
               totalMixtureDg: f.totalMixtureDg,
               notes: Value(f.notes),
@@ -67,6 +68,7 @@ class FormulaRepository {
               percentHundredths: ing.percentHundredths,
               requiredDg: ing.requiredDg,
               displayRgb: ing.displayRgb,
+              form: Value(ing.form),
             ),
         ]);
       });
@@ -103,11 +105,13 @@ class FormulaRepository {
             percentHundredths: i.percentHundredths,
             requiredDg: i.requiredDg,
             displayRgb: i.displayRgb,
+            form: i.form,
           ),
       ],
       totalDyeDg: f.totalDyeDg,
       developerRatio: f.developerRatio,
       developerVolume: f.developerVolume,
+      developerForm: f.developerForm,
       developerDg: f.developerDg,
       totalMixtureDg: f.totalMixtureDg,
       notes: f.notes,
@@ -137,6 +141,7 @@ class FormulaRepository {
           percentHundredths: r.percentHundredths,
           requiredDg: r.requiredDg,
           displayRgb: r.displayRgb,
+          form: r.form,
         ),
       );
     }
@@ -155,6 +160,7 @@ class FormulaRepository {
               ? null
               : DeveloperRatio(r.developerRatioHundredths!),
           developerVolume: r.developerVolume,
+          developerForm: r.developerForm,
           developerDg: r.developerDg,
           totalMixtureDg: r.totalMixtureDg,
           notes: r.notes,

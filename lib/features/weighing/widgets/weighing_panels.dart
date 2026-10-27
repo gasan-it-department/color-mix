@@ -7,6 +7,7 @@ import 'package:colormix_studio/features/weighing/weighing_controller.dart';
 import 'package:colormix_studio/features/weighing/weighing_state.dart';
 import 'package:colormix_studio/features/weighing/widgets/weighing_bits.dart';
 import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
+import 'package:colormix_studio/shared/widgets/label_tag.dart';
 
 BoxDecoration _panel(BuildContext context, {Color? color, Color? border}) {
   final scheme = Theme.of(context).colorScheme;
@@ -176,11 +177,18 @@ class PourPanel extends StatelessWidget {
                       'Step ${s.stepIndex + 1} of ${s.steps.length}',
                       style: muted,
                     ),
-                    Text(
-                      s.step.name,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    Wrap(
+                      spacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          s.step.name,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        LabelTag(s.step.form.label),
+                      ],
                     ),
                   ],
                 ),
@@ -246,6 +254,16 @@ class PourPanel extends StatelessWidget {
               color: zone == PourZone.under ? null : fg,
             ),
           ),
+          // how this product goes in: squeeze, pour or spoon
+          if (zone == PourZone.under || zone == PourZone.approaching) ...[
+            const SizedBox(height: 2),
+            Text(
+              zone == PourZone.under
+                  ? s.step.form.pourHint
+                  : s.step.form.slowHint,
+              style: muted,
+            ),
+          ],
           if (zone == PourZone.over) ...[
             const SizedBox(height: 12),
             _Overshoot(state: s, controller: controller),

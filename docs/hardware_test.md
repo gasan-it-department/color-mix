@@ -82,7 +82,17 @@ App (or nRF Connect) connected and receiving the whole time.
 - [ ] the same with the phone across the room, note where readings start going missing: ______
 - [ ] unplug and replug the scale while the app's weighing screen is open: the app says disconnected, Reconnect picks it up again once the scale is advertising, and the session carries on
 
-## 8. The whole scenario
+## 8. Real products
+
+With water standing in for a liquid, a cream (conditioner works) and a powder (flour works), pour each to a 30 g step.
+
+- [ ] liquid: does the amber band (4.5 g early) leave time to stop? overshoot: ______ g
+- [ ] cream: does the tube's tail land after "On target"? overshoot: ______ g
+- [ ] powder: does a spoonful jump past the band? overshoot: ______ g
+
+If one form overshoots by more than the tolerance most times, widen its band in `lib/shared/models/product_form.dart`.
+
+## 9. The whole scenario
 
 The blueprint's 16 steps on this scale: [test_procedure.md](test_procedure.md) section 3.
 
