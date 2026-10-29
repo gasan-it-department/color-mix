@@ -137,6 +137,51 @@ class SessionRepository {
     return (await _withSteps([row])).single;
   }
 
+  /// a whole session as it was, from a backup. [formulaId] is dropped
+  /// when that formula isn't here
+  Future<void> insertWhole(WeighingSession s, {required bool formulaExists}) {
+    return _db.transaction(() async {
+      await _db
+          .into(_db.weighingSessions)
+          .insert(
+            WeighingSessionsCompanion.insert(
+              id: s.id,
+              formulaId: Value(formulaExists ? s.formulaId : null),
+              formulaName: s.formulaName,
+              scaleId: s.deviceId,
+              scaleName: s.deviceName,
+              currentStepIndex: Value(s.currentStepIndex),
+              plannedTotalDg: s.plannedTotalDg,
+              measuredTotalMg: Value(s.measuredTotalMg),
+              toleranceMg: Value(s.toleranceMg),
+              status: s.status,
+              startedAt: s.startedAt,
+              finishedAt: Value(s.completedAt),
+            ),
+          );
+      await _db.batch((b) {
+        b.insertAll(_db.weighingSteps, [
+          for (final x in s.steps)
+            WeighingStepsCompanion.insert(
+              id: x.id,
+              sessionId: s.id,
+              position: x.position,
+              ingredientName: x.ingredientName,
+              displayRgb: x.displayRgb,
+              isDeveloper: Value(x.isDeveloper),
+              form: Value(x.form),
+              targetAddedDg: x.targetAddedDg,
+              targetCumulativeDg: x.targetCumulativeDg,
+              actualCumulativeMg: Value(x.actualCumulativeMg),
+              actualAddedMg: Value(x.actualAddedMg),
+              confirmedStable: Value(x.confirmedStable),
+              confirmedAt: Value(x.confirmedAt),
+            ),
+        ]);
+      });
+    });
+  }
+
   /// steps go with it (cascade)
   Future<void> delete(String id) =>
       (_db.delete(_db.weighingSessions)..where((x) => x.id.equals(id))).go();

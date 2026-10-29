@@ -9,6 +9,7 @@ import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
 import 'package:colormix_studio/core/widgets/connection_chip.dart';
 import 'package:colormix_studio/core/widgets/section_card.dart';
+import 'package:colormix_studio/features/backup/backup_card.dart';
 import 'package:colormix_studio/features/settings/app_settings.dart';
 import 'package:colormix_studio/features/settings/settings_providers.dart';
 
@@ -54,6 +55,8 @@ class SettingsScreen extends ConsumerWidget {
               _Formulas(),
               SizedBox(height: 12),
               _Scale(),
+              SizedBox(height: 12),
+              BackupCard(),
               SizedBox(height: 12),
               _About(),
             ],

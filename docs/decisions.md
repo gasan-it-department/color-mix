@@ -128,6 +128,15 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 - Shown on the start sheet (under each name), as a tag on the weighing screen, and in every target / added table, history included. Sessions copy each step's form when they start, like the targets, so editing the formula later doesn't change history.
 - Schema v3 adds the three columns with cream as the default, so everything saved before reads as cream. The migration test builds real v1 and v2 databases by hand and opens them.
 
+## Backup and release builds (after phase 8)
+
+- Settings, Backup: one JSON file with every formula and weighing session, in the database's own units. Saved and opened through the system pickers (file_picker), so the stylist chooses where it goes: Downloads, Drive, a USB stick. No storage permission needed.
+- The file is checked before anything is touched: format name, version (a newer one asks to update the app), every field's type, and the editor's own rules (1 to 3 colors, 100%, weights adding up to the dye, mixture = dye + developer). One bad field refuses the whole file, saying which formula or session and what. Half a restore would be worse than none.
+- A restore only adds. Anything already here with the same id stays as it is, so restoring twice, or an older file, never overwrites newer work. The confirm sheet says so, and the result counts what was added and what was already there. A session whose formula isn't here keeps its record, unlinked, like a deleted formula's.
+- The open picker takes any file type: some Android file managers label .json as plain bytes, and a filter would hide the backup. The contents decide.
+- Release APKs are signed with an upload key made on 2026-10-29 (`android/upload-keystore.jks`, RSA 2048, valid to 2054, password in `android/key.properties`). Both git-ignored, and the README says to keep a copy: an update only installs over the app with the same key. Gradle falls back to the debug key with a warning when `key.properties` isn't there, so the project still builds on another PC.
+- `--split-per-abi` for handing out: the arm64 APK is about a third of the universal one.
+
 ## Firmware (phase 5)
 
 - `firmware/esp32_color_mix_scale`, PlatformIO, Arduino core 3.3 through the official espressif32 v8 platform. Details and wiring in its README.

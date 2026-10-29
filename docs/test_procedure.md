@@ -19,6 +19,7 @@ All of it runs on the PC, no phone, no board. What it covers:
 | color: CIELAB / CIEDE2000, nearest demo shade, hex input | `color_science_test`, `color_studio_test`, `demo_catalog_test` |
 | storage: formulas, sessions, history, interrupted sessions, duplicate names, opening v1 and v2 databases, settings | `formula_repository_test`, `session_repository_test`, `migration_test`, `settings_repository_test` |
 | product form: cream / liquid / powder saved, duplicated and kept in history, slow-down band per form, the editor's form menu at 360 px, pour hints while weighing | `product_form_test`, `product_form_ui_test` |
+| backup: everything round trips, a restore only adds, damaged / foreign / newer files refused with the reason, the Settings card from save to restore on a fresh install | `backup_test` |
 | weighing rules: bowl zero, cumulative targets, zones, overshoot, manual moves, stale readings, drift after a reconnect, the simulator | `weighing_state_test`, `stability_detector_test`, `weighing_flow_test`, `simulated_scale_test` |
 | BLE: frame bytes, sequence wrap, scan, connect, refuse the wrong device or protocol, reconnect after a drop, tare, calibration commands, connection test, missed frames | `esp32_protocol_test`, `ble_scale_device_test`, `ble_scan_test`, `scale_screen_test` |
 | screens: shell and tabs, saved formulas, history, settings, calibration wizard, scale check and its noise numbers, 360 px phones | `widget_test`, `saved_formulas_test`, `settings_screen_test`, `calibration_test`, `scale_check_test`, `reading_stats_test` |
@@ -59,6 +60,8 @@ Any build: Android phone, Windows, or the web preview (`flutter build web`, then
 | 16 | back, Formulas, the formula's ⋮, Weigh | the start sheet again with the same amounts. History shows the session as Completed, its detail shows 4 of 4 on target |
 
 Product forms: before step 6, set Color A to Liquid in its name field's menu and the developer to Liquid. The sheet shows the form under each name. Weighing Color A says "Pour slowly, it runs fast.", and turns amber about 4.5 g before 30 g instead of 3 g, with "A few drops at a time now". A cream says "Squeeze it in steadily.", a powder "Spoon it in.".
+
+Backup, on a phone: Settings, Save backup, save it to Downloads. Uninstall the app, install it again, Settings, Restore, pick that file: the formulas and History are back.
 
 Worth trying on the way: Pour 2 g too much (red, Over by, Continue manually, "Moved on" on the record), Drop connection (paused, Reconnect, carries on), Freeze readings (Waiting for readings, nothing confirms).
 

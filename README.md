@@ -13,7 +13,7 @@ Demo formulas are examples only, not product-validated. The color on screen is a
 - **Weighing**: zero once with the bowl on, then each ingredient poured to a cumulative target. Live reading, remaining, progress, steady or not, amber close, green on target, red over. A liquid turns amber sooner than a cream, and each form gets its own pouring hint. Overshoot is shown and recorded, never "fixed" by changing the other amounts
 - **Scale**: the ColorMix scale over BLE, or a simulated scale that runs everything without hardware. Calibration wizard and a scale check (connection test, noise)
 - **Saved**: formulas with search, duplicate, delete, and every weighing session with what was really poured
-- **Settings**: theme, sounds, move on by itself, tolerance, steadiness, starting dye amount
+- **Settings**: theme, sounds, move on by itself, tolerance, steadiness, starting dye amount, and a backup: save every formula and weighing session to a file, restore it on another phone or after a reinstall
 
 ## Setup
 
@@ -38,6 +38,16 @@ flutter build apk --release
 - web is only for previewing screens, real Bluetooth never runs there. `web/sqlite3.wasm` and `web/drift_worker.js` come from the drift-2.35.3 GitHub release, update them together with drift
 - Kotlin incremental builds are off in `android/gradle.properties`: the project on D: and the pub cache on C: break them
 
+## Release builds
+
+```
+flutter build apk --release --split-per-abi
+```
+
+`build/app/outputs/flutter-apk/app-arm64-v8a-release.apk` is the one for phones (about a third the size of one APK with every CPU type in it). Leave `--split-per-abi` off for a single APK that installs anywhere.
+
+Release builds are signed with the upload key in `android/upload-keystore.jks`, password in `android/key.properties`. Both are git-ignored and exist only on this PC, made 2026-10-29. **Keep a copy of both somewhere safe**: Android only installs an update over the app when it's signed with the same key. A lost key means uninstalling the old app first, and the formulas go with it unless there's a backup. Without `key.properties` a release build falls back to the debug key and says so in the build log.
+
 ## Dependencies
 
 | Package | For |
@@ -48,6 +58,7 @@ flutter build apk --release
 | universal_ble 3 | Bluetooth LE on Android and Windows (BSD-3). Picked over flutter_blue_plus, whose licence needs paying for commercial use |
 | flex_color_picker 4 | the custom color picker |
 | wakelock_plus | screen stays on while weighing |
+| file_picker 13 | the system's save and open pickers for backup files (MIT) |
 | intl | dates |
 | uuid | ids |
 | clock | time that tests can control |
@@ -89,7 +100,7 @@ A standard Bluetooth weight scale (0x181D) connects too but is marked experiment
 - **No BLE pairing or encryption.** Anyone nearby with a BLE app could read the weight or send a tare. Fine on a salon bench for a prototype, not for anything more
 - **One phone per scale** is the plan, nothing enforces it
 - **Temperature drift isn't compensated**, re-zero or recalibrate after moving the scale somewhere warmer or colder
-- **No backup or sync.** Formulas and sessions live on the device only. Uninstalling the app loses them
+- **No sync.** Formulas and sessions live on the device. Settings, Backup saves them to a file you keep. Uninstalling without one loses them
 - Developer ratio and volume are recorded as entered, the app doesn't check them against any product
 - **Grams only.** A product whose instructions are in mL has to be converted by its maker's numbers, the app doesn't know densities. The slow-down bands for liquid and powder are first guesses
 
