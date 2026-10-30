@@ -2,6 +2,7 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:colormix_studio/core/utils/color_utils.dart';
+import 'package:colormix_studio/features/color_studio/camera/camera_reading.dart';
 import 'package:colormix_studio/shared/data/demo_catalog.dart';
 import 'package:colormix_studio/shared/models/demo_recipe.dart';
 import 'package:colormix_studio/shared/models/hair_color.dart';
@@ -45,7 +46,21 @@ class ColorTargetNotifier extends Notifier<ColorTarget?> {
   void clear() => state = null;
 }
 
-enum StudioMode { palette, custom }
+enum StudioMode { palette, custom, camera }
+
+/// the last camera reading that became the target, for the camera panel to
+/// show what it was and what to watch out for
+final lastCameraReadingProvider =
+    NotifierProvider<LastCameraReadingNotifier, ColorReading?>(
+      LastCameraReadingNotifier.new,
+    );
+
+class LastCameraReadingNotifier extends Notifier<ColorReading?> {
+  @override
+  ColorReading? build() => null;
+
+  void set(ColorReading reading) => state = reading;
+}
 
 final studioModeProvider = NotifierProvider<StudioModeNotifier, StudioMode>(
   StudioModeNotifier.new,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:colormix_studio/core/widgets/app_page.dart';
 import 'package:colormix_studio/features/color_studio/color_target.dart';
+import 'package:colormix_studio/features/color_studio/widgets/camera_panel.dart';
 import 'package:colormix_studio/features/color_studio/widgets/custom_picker.dart';
 import 'package:colormix_studio/features/color_studio/widgets/labels_sheet.dart';
 import 'package:colormix_studio/features/color_studio/widgets/palette_grid.dart';
@@ -104,29 +105,50 @@ class _PickerPane extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
         ],
-        SegmentedButton<StudioMode>(
-          showSelectedIcon: false,
-          expandedInsets: EdgeInsets.zero,
-          segments: const [
-            ButtonSegment(
-              value: StudioMode.palette,
-              icon: Icon(Icons.palette_outlined),
-              label: Text('Demo palette'),
-            ),
-            ButtonSegment(
-              value: StudioMode.custom,
-              icon: Icon(Icons.tune),
-              label: Text('Custom color'),
-            ),
-          ],
-          selected: {mode},
-          onSelectionChanged: (s) =>
-              ref.read(studioModeProvider.notifier).set(s.first),
+        LayoutBuilder(
+          builder: (context, c) {
+            // three segments with icons don't fit a phone. without them the
+            // words do, on one line each if they're let shrink a little
+            final icons = c.maxWidth >= 440;
+            Widget label(String text) => icons
+                ? Text(text)
+                : FittedBox(fit: BoxFit.scaleDown, child: Text(text));
+            return SegmentedButton<StudioMode>(
+              showSelectedIcon: false,
+              expandedInsets: EdgeInsets.zero,
+              style: icons
+                  ? null
+                  : SegmentedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                    ),
+              segments: [
+                ButtonSegment(
+                  value: StudioMode.palette,
+                  icon: icons ? const Icon(Icons.palette_outlined) : null,
+                  label: label('Demo palette'),
+                ),
+                ButtonSegment(
+                  value: StudioMode.custom,
+                  icon: icons ? const Icon(Icons.tune) : null,
+                  label: label('Custom color'),
+                ),
+                ButtonSegment(
+                  value: StudioMode.camera,
+                  icon: icons ? const Icon(Icons.photo_camera_outlined) : null,
+                  label: label('Camera'),
+                ),
+              ],
+              selected: {mode},
+              onSelectionChanged: (s) =>
+                  ref.read(studioModeProvider.notifier).set(s.first),
+            );
+          },
         ),
         SizedBox(height: showIntro ? 24 : 16),
         switch (mode) {
           StudioMode.palette => const PaletteGrid(),
           StudioMode.custom => const CustomPicker(),
+          StudioMode.camera => const CameraPanel(),
         },
       ],
     );

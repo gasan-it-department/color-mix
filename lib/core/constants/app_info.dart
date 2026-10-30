@@ -31,4 +31,7 @@ abstract final class Routes {
   static String session(String id) => '/history/$id';
 
   static const calibrate = '/calibrate';
+
+  /// read a hair color off a photo, from Color Studio
+  static const camera = '/camera';
 }

@@ -8,7 +8,7 @@ Demo formulas are examples only, not product-validated. The color on screen is a
 
 ## What's in it
 
-- **Color Studio**: demo palette (labelled as demo), custom colors by picker, hex or RGB, the nearest demo shade for a custom color
+- **Color Studio**: demo palette (labelled as demo), custom colors by picker, hex or RGB, the nearest demo shade for a custom color, and a color read with the camera off hair laid on white paper or a gray card (the card corrects the camera's white balance and exposure)
 - **Formula**: 1 to 3 colors by percentage, developer by weight ratio, exact gram amounts that always add up, plain messages for anything that doesn't. Each color and the developer is marked cream, liquid or powder. Amounts in g, oz, mL or fl oz, picked in the dye field: mL goes through each product's density (g per mL), and the scale still weighs grams
 - **Weighing**: zero once with the bowl on, then each ingredient poured to a cumulative target. Live reading, remaining, progress, steady or not, amber close, green on target, red over. A liquid turns amber sooner than a cream, and each form gets its own pouring hint. Overshoot is shown and recorded, never "fixed" by changing the other amounts
 - **Scale**: the ColorMix scale over BLE, or a simulated scale that runs everything without hardware. Calibration wizard and a scale check (connection test, noise)
@@ -59,6 +59,7 @@ Release builds are signed with the upload key in `android/upload-keystore.jks`, 
 | flex_color_picker 4 | the custom color picker |
 | wakelock_plus | screen stays on while weighing |
 | file_picker 13 | the system's save and open pickers for backup files (MIT) |
+| camera 0.12 | one still for reading a hair color (official plugin, BSD-3). Its mic and storage permissions are removed in the manifest |
 | intl | dates |
 | uuid | ids |
 | clock | time that tests can control |
@@ -102,6 +103,7 @@ A standard Bluetooth weight scale (0x181D) connects too but is marked experiment
 - **Temperature drift isn't compensated**, re-zero or recalibrate after moving the scale somewhere warmer or colder
 - **No sync.** Formulas and sessions live on the device. Settings, Backup saves them to a file you keep. Uninstalling without one loses them
 - Developer ratio and volume are recorded as entered, the app doesn't check them against any product
+- **A camera reading is close, not exact.** The card takes out the camera's white balance and exposure, not its tone curve or the light falling unevenly. Expect a few shades of difference, and none of it is tried on a real phone camera yet, only on a fake one in the web preview
 - **mL and fl oz are only as right as the density.** The usual figures (1.00 for creams and liquids, 0.50 for a powder) are rough, the product sheet has the real one. Shares and the developer ratio stay by weight in every unit. The slow-down bands for liquid and powder are first guesses
 
 ## Layout

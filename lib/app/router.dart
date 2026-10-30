@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:colormix_studio/app/shell.dart';
 import 'package:colormix_studio/core/constants/app_info.dart';
+import 'package:colormix_studio/features/color_studio/camera/camera_screen.dart';
 import 'package:colormix_studio/features/color_studio/color_studio_screen.dart';
 import 'package:colormix_studio/features/dashboard/dashboard_screen.dart';
 import 'package:colormix_studio/features/formulation/formula_editor_screen.dart';
@@ -75,6 +76,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.calibrate,
         builder: (context, state) => const CalibrationScreen(),
+      ),
+      GoRoute(
+        path: Routes.camera,
+        builder: (context, state) => const CameraColorScreen(),
       ),
       GoRoute(
         path: '/history/:id',

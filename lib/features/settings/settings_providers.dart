@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:colormix_studio/core/database/database_provider.dart';
+import 'package:colormix_studio/features/color_studio/camera/camera_reading.dart';
 import 'package:colormix_studio/features/settings/app_settings.dart';
 import 'package:colormix_studio/features/settings/settings_repository.dart';
 import 'package:colormix_studio/shared/models/measure_unit.dart';
@@ -40,6 +41,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> setFormulaUnit(MeasureUnit unit) =>
       _update(state.copyWith(formulaUnit: unit));
+
+  Future<void> setCameraCard(ReferenceCard card) =>
+      _update(state.copyWith(cameraCard: card));
 
   Future<void> setStability({int? thresholdMg, int? dwellMs}) => _update(
     state.copyWith(

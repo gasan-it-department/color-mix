@@ -148,6 +148,19 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 - Schema v4: `formulas.unit` (g by default, so every older formula reads as grams), `formulas.developer_density_milli` and `formula_ingredients.density_milli`, both null for the usual figure. Backups carry them too. An older file without them restores in grams, still backup version 1. The migration test now builds v1, v2 and v3 databases.
 - The enum field for "grams" / "ounces" is `label`, not `name`. `name` is the enum's own and goes into the db, settings and backups. Called `name` at first, it shadowed the real one and wrote "grams" where "g" was read back.
 
+## Color from the camera (after phase 8)
+
+- Color Studio has a third mode, Camera: one still of the hair, the color read off it becomes the custom target. Close, not exact, and the screens say so.
+- A phone camera never gives the true color. It sets its own white balance and exposure for every shot, the room light tints everything, and the photo is tone-mapped on top. So the hair lies on a white or gray card in the same photo. The card is known to be neutral, at a known lightness (paper L* 94, an 18% gray card L* 50), so whatever the camera did to the card it did to the hair: each channel is divided back out in linear light (`lib/features/color_studio/camera/camera_reading.dart`). The camera plugin can't lock white balance anyway, so a card in the same frame is the only way that holds.
+- The layout is symmetric: a hair square in the middle (30% of the short side) and four small card squares around it (10%, centres 30% out, up/down/left/right). Turned 90° it's the same, so it doesn't matter whether the phone saved the photo rotated, and lens shading darkens all four card squares alike. The guide on the live view is drawn from the same numbers.
+- Each card square is its channel-wise median, so a stray strand doesn't count. The hair square drops its darkest and lightest fifth (gaps between strands, shine) and averages the rest in linear light.
+- It refuses rather than guesses: card washed out (any channel 250+), too dark, not a card (one channel over 3× another), card squares more than 1.4× apart in light or apart in color (covered, shadow), hair square looks like the card. A softer unevenness (1.15×) or a lot of blown-out shine is a warning under the reading.
+- Stills, not a stream: the plugin's image stream isn't on web, and a still is all a reading needs. Decoded with `instantiateImageCodecWithSize`, scaled to 800 px on the long side (`ImageDescriptor`'s width throws on web, found in the preview). Flash off: it would light the hair, not the room.
+- What's left that the card can't fix: the camera's tone curve isn't plain sRGB, a phone may save Display P3, and the hair in the middle catches a little more light than the card squares further out. Those are a few ΔE, which is why the copy says close, not exact. A color chart with more patches, or a sensor in a light-tight cap on the ESP32 (AS7341), would do better.
+- The camera plugin (official, BSD-3) also declares the mic and storage. The app's manifest removes both, and the camera feature is optional so phones without one still install. iOS has its camera usage string, the rest of iOS isn't set up.
+- The card last picked is kept in settings (`camera_card`), white paper by default.
+- On phones the three mode buttons drop their icons and let the words shrink to stay on one line.
+
 ## Firmware (phase 5)
 
 - `firmware/esp32_color_mix_scale`, PlatformIO, Arduino core 3.3 through the official espressif32 v8 platform. Details and wiring in its README.

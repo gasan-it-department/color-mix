@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:colormix_studio/features/color_studio/camera/camera_reading.dart';
 import 'package:colormix_studio/shared/models/measure_unit.dart';
 
 class AppSettings {
@@ -12,6 +13,7 @@ class AppSettings {
     this.stabilityThresholdMg = 200,
     this.stabilityDwellMs = 800,
     this.formulaUnit = MeasureUnit.g,
+    this.cameraCard = ReferenceCard.white,
     this.lastScaleId,
     this.lastScaleName,
   });
@@ -36,6 +38,9 @@ class AppSettings {
   /// the unit last picked in the editor, new formulas start in it
   final MeasureUnit formulaUnit;
 
+  /// what the hair was last laid on for a camera reading
+  final ReferenceCard cameraCard;
+
   /// the ble scale used last, so it can be reconnected without a scan
   final String? lastScaleId;
   final String? lastScaleName;
@@ -49,6 +54,7 @@ class AppSettings {
     int? stabilityThresholdMg,
     int? stabilityDwellMs,
     MeasureUnit? formulaUnit,
+    ReferenceCard? cameraCard,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -59,6 +65,7 @@ class AppSettings {
       stabilityThresholdMg: stabilityThresholdMg ?? this.stabilityThresholdMg,
       stabilityDwellMs: stabilityDwellMs ?? this.stabilityDwellMs,
       formulaUnit: formulaUnit ?? this.formulaUnit,
+      cameraCard: cameraCard ?? this.cameraCard,
       lastScaleId: lastScaleId,
       lastScaleName: lastScaleName,
     );
@@ -74,6 +81,7 @@ class AppSettings {
     stabilityThresholdMg: stabilityThresholdMg,
     stabilityDwellMs: stabilityDwellMs,
     formulaUnit: formulaUnit,
+    cameraCard: cameraCard,
     lastScaleId: id,
     lastScaleName: id == null ? null : name,
   );
