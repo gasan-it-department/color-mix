@@ -139,10 +139,20 @@ enum DeveloperMode {
 }
 
 class PartInput {
-  const PartInput({required this.name, required this.percentText});
+  const PartInput({
+    required this.name,
+    required this.percentText,
+    this.form = ProductForm.cream,
+    this.densityText = '',
+  });
 
   final String name;
   final String percentText;
+  final ProductForm form;
+
+  /// g per mL from the product sheet, empty uses the form's figure. only
+  /// read when the unit is a volume
+  final String densityText;
 }
 
 class FormulaInputs {
@@ -154,15 +164,29 @@ class FormulaInputs {
     this.presetRatioHundredths,
     this.customRatioText = '',
     this.notes = '',
+    this.unit = MeasureUnit.g,
+    this.developerForm = ProductForm.cream,
+    this.developerDensityText = '',
+    this.pinnedDyeDg,
   });
 
   final String name;
+
+  /// in [unit]
   final String dyeText;
   final List<PartInput> parts;
   final DeveloperMode developerMode;
   final int? presetRatioHundredths;
   final String customRatioText;
   final String notes;
+  final MeasureUnit unit;
+  final ProductForm developerForm;
+  final String developerDensityText;
+
+  /// the exact amount behind [dyeText] when it was only converted to
+  /// another unit, not typed: switching g -> oz -> g mustn't nudge 60.0 g
+  /// to 60.1 g through the rounding
+  final int? pinnedDyeDg;
 }
 
 enum IssueField {
@@ -170,8 +194,10 @@ enum IssueField {
   dye,
   partName,
   partPercent,
+  partDensity,
   total,
   developer,
+  developerDensity,
   mixture,
   notes,
 }
@@ -204,6 +230,9 @@ class FormulaResult {
     this.ratioHundredths,
     this.developerDg,
     this.mixtureDg,
+    this.unit = MeasureUnit.g,
+    this.densities = const [],
+    this.developerDensity = 1000,
   });
 
   final List<FormulaIssue> issues;
@@ -219,7 +248,57 @@ class FormulaResult {
   final int? developerDg;
   final int? mixtureDg;
 
+  final MeasureUnit unit;
+
+  /// per color, g per mL × 1000: what was typed, or the form's figure
+  final List<int> densities;
+  final int developerDensity;
+
   bool get canSave => !issues.any((i) => i.blocking);
+
+  /// color [i]'s weight in the formula's unit
+  String partAmount(int i) => weights == null
+      ? '—'
+      : unit.formatDg(weights![i], densityMilli: densities[i]);
+
+  String get dyeAmount {
+    if (dyeDg == null) return '—';
+    if (!unit.isVolume) return unit.formatDg(dyeDg!);
+    return unit.formatValue(dyeValue!);
+  }
+
+  /// the dye in the formula's unit, as a number. a volume adds up color by
+  /// color, each through its own density. without the weights (shares not
+  /// 100% yet) it goes through the same mix figure the typed amount did
+  double? get dyeValue {
+    if (dyeDg == null) return null;
+    if (!unit.isVolume) return unit.fromMg(dyeDg! * 100);
+    if (weights == null) {
+      return unit.fromMg(
+        dyeDg! * 100,
+        densityMilli: _mixDensity(densities, percents),
+      );
+    }
+    return _volume([for (final (i, w) in weights!.indexed) (w, densities[i])]);
+  }
+
+  String get developerAmount => developerDg == null
+      ? '—'
+      : unit.formatDg(developerDg!, densityMilli: developerDensity);
+
+  String get mixtureAmount {
+    if (mixtureDg == null) return '—';
+    if (!unit.isVolume) return unit.formatDg(mixtureDg!);
+    return unit.formatValue(
+      dyeValue! + _volume([(developerDg ?? 0, developerDensity)]),
+    );
+  }
+
+  // a volume adds up product by product, each through its own density
+  double _volume(List<(int, int)> parts) => parts.fold<double>(
+    0,
+    (s, p) => s + unit.fromMg(p.$1 * 100, densityMilli: p.$2),
+  );
 
   /// first blocking message for a field (and color row)
   String? errorFor(IssueField field, {int? part}) {
@@ -244,20 +323,50 @@ FormulaResult calculateFormula(FormulaInputs input) {
     );
   }
 
-  // dye amount
-  final dyeDg = parseDecigrams(input.dyeText);
+  // densities, only needed to turn a volume into grams
+  final unit = input.unit;
+  final densities = <int>[];
+  for (final (i, p) in input.parts.indexed) {
+    densities.add(
+      _density(
+        p.densityText,
+        p.form,
+        check: unit.isVolume,
+        onBad: (msg) =>
+            issues.add(FormulaIssue(IssueField.partDensity, msg, part: i)),
+      ),
+    );
+  }
+  final developerDensity = _density(
+    input.developerDensityText,
+    input.developerForm,
+    check: unit.isVolume && input.developerMode != DeveloperMode.none,
+    onBad: (msg) => issues.add(FormulaIssue(IssueField.developerDensity, msg)),
+  );
+
+  // dye amount, typed in the formula's unit
+  int? dyeDg = input.pinnedDyeDg;
+  if (dyeDg == null) {
+    final v = unit.parse(input.dyeText);
+    if (v != null) {
+      final mixDensity = _mixDensity(densities, [
+        for (final p in input.parts) parsePercentHundredths(p.percentText),
+      ]);
+      dyeDg = milligramsToDecigrams(unit.toMg(v, densityMilli: mixDensity));
+    }
+  }
   if (dyeDg == null) {
     issues.add(
-      const FormulaIssue(
+      FormulaIssue(
         IssueField.dye,
-        'Enter the dye amount in grams, like 60 or 62.5.',
+        'Enter the dye amount in ${unit.label}, like ${unit.example}.',
       ),
     );
   } else if (dyeDg == 0) {
     issues.add(
-      const FormulaIssue(
+      FormulaIssue(
         IssueField.dye,
-        'The dye amount has to be more than 0 g.',
+        'The dye amount has to be more than 0 ${unit.symbol}.',
       ),
     );
   } else if (dyeDg > scaleCapacityDg) {
@@ -432,5 +541,53 @@ FormulaResult calculateFormula(FormulaInputs input) {
     ratioHundredths: ratio,
     developerDg: developerDg,
     mixtureDg: mixtureDg,
+    unit: unit,
+    densities: densities,
+    developerDensity: developerDensity,
   );
+}
+
+/// a typed density, or the form's figure when it's empty or wrong.
+/// [check] off when the unit isn't a volume: nothing uses it then
+int _density(
+  String text,
+  ProductForm form, {
+  required bool check,
+  required void Function(String) onBad,
+}) {
+  if (text.trim().isEmpty) return form.densityMilli;
+  final d = parseDensityMilli(text);
+  if (d != null && d >= minDensityMilli && d <= maxDensityMilli) return d;
+  if (check) {
+    onBad(
+      'Enter grams per mL from the product sheet, between '
+      '${densityText(minDensityMilli)} and ${densityText(maxDensityMilli)}, '
+      'or leave it empty for ${densityText(form.densityMilli)}.',
+    );
+  }
+  return form.densityMilli;
+}
+
+/// grams per mL × 1000 of the colors together, for turning a typed volume
+/// into grams. the shares are by weight, so the mix is the weighted
+/// harmonic mean. until the shares make 100% there's nothing to weight by:
+/// plain average, it only steers the field while it's being typed. not
+/// rounded, so 60 mL typed comes back as 60.0 mL
+double _mixDensity(List<int> densities, List<int?> percents) {
+  if (densities.isEmpty) return 1000;
+  if (densities.every((d) => d == densities.first)) {
+    return densities.first.toDouble();
+  }
+  final valid =
+      percents.length == densities.length &&
+      percents.every((p) => p != null && p > 0) &&
+      percents.fold(0, (s, p) => s + p!) == fullPercent;
+  if (!valid) {
+    return densities.fold(0, (s, d) => s + d) / densities.length;
+  }
+  var inverse = 0.0;
+  for (final (i, d) in densities.indexed) {
+    inverse += percents[i]! / fullPercent / d;
+  }
+  return 1 / inverse;
 }

@@ -136,23 +136,29 @@ class _WeighingView extends ConsumerWidget {
           ],
         ),
         body: wide
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 12, 32),
-                      children: main,
-                    ),
+            ? Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1240),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.fromLTRB(32, 16, 12, 32),
+                          children: main,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 380,
+                        child: ListView(
+                          padding: const EdgeInsets.fromLTRB(12, 16, 32, 32),
+                          children: side,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(
-                    width: 380,
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(12, 8, 24, 32),
-                      children: side,
-                    ),
-                  ),
-                ],
+                ),
               )
             : ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),

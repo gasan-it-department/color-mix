@@ -33,32 +33,83 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final narrow = MediaQuery.sizeOf(context).width < Breakpoints.rail;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
+          constraints: const BoxConstraints(maxWidth: 1080),
           child: ListView(
             padding: EdgeInsets.fromLTRB(
-              narrow ? 16 : 24,
-              8,
-              narrow ? 16 : 24,
+              narrow ? 20 : 32,
+              16,
+              narrow ? 20 : 32,
               32,
             ),
-            children: const [
-              _Appearance(),
-              SizedBox(height: 12),
-              _Weighing(),
-              SizedBox(height: 12),
-              _Formulas(),
-              SizedBox(height: 12),
-              _Scale(),
-              SizedBox(height: 12),
-              BackupCard(),
-              SizedBox(height: 12),
-              _About(),
+            children: [
+              Text(
+                'A studio that works your way.',
+                style: theme.textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Fine-tune your workspace, your scale, and your mixing routine.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 24),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth >= 840) {
+                    return const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            children: [
+                              _Appearance(),
+                              SizedBox(height: 16),
+                              _Formulas(),
+                              SizedBox(height: 16),
+                              _Scale(),
+                              SizedBox(height: 16),
+                              _About(),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              _Weighing(),
+                              SizedBox(height: 16),
+                              BackupCard(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  return const Column(
+                    children: [
+                      _Appearance(),
+                      SizedBox(height: 16),
+                      _Weighing(),
+                      SizedBox(height: 16),
+                      _Formulas(),
+                      SizedBox(height: 16),
+                      _Scale(),
+                      SizedBox(height: 16),
+                      BackupCard(),
+                      SizedBox(height: 16),
+                      _About(),
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         ),

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import 'package:colormix_studio/core/database/tables.dart';
+import 'package:colormix_studio/shared/models/measure_unit.dart';
 import 'package:colormix_studio/shared/models/product_form.dart';
 import 'package:colormix_studio/shared/models/weighing_session.dart';
 
@@ -21,7 +22,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -36,6 +37,13 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(formulaIngredients, formulaIngredients.form);
         await m.addColumn(formulas, formulas.developerForm);
         await m.addColumn(weighingSteps, weighingSteps.form);
+      }
+      // v4: a unit to show amounts in, and product densities for mL.
+      // everything before is grams with the usual densities
+      if (from < 4) {
+        await m.addColumn(formulas, formulas.unit);
+        await m.addColumn(formulas, formulas.developerDensityMilli);
+        await m.addColumn(formulaIngredients, formulaIngredients.densityMilli);
       }
     },
     beforeOpen: (details) async {

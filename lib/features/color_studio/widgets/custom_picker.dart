@@ -113,23 +113,33 @@ class _CustomPickerState extends ConsumerState<CustomPicker> {
     final scheme = Theme.of(context).colorScheme;
 
     return SectionCard(
+      title: 'Color controls',
       child: LayoutBuilder(
         builder: (context, c) {
-          final wide = c.maxWidth >= 560;
+          final wide = c.maxWidth >= 620;
           final wheelSize = wide ? 240.0 : math.min(c.maxWidth, 280.0);
 
-          final wheel = SizedBox.square(
-            dimension: wheelSize,
-            child: ColorWheelPicker(
-              color: color,
-              onChanged: _onWheel,
-              onWheel: (_) {},
-              wheelWidth: 20,
-              wheelSquarePadding: 8,
-              wheelSquareBorderRadius: 10,
-              borderColor: scheme.outlineVariant,
-              hasBorder: true,
-              shouldUpdate: sync,
+          final wheel = DecoratedBox(
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainer,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: SizedBox.square(
+                dimension: math.max(0, wheelSize - 24),
+                child: ColorWheelPicker(
+                  color: color,
+                  onChanged: _onWheel,
+                  onWheel: (_) {},
+                  wheelWidth: 20,
+                  wheelSquarePadding: 8,
+                  wheelSquareBorderRadius: 10,
+                  borderColor: scheme.outlineVariant,
+                  hasBorder: true,
+                  shouldUpdate: sync,
+                ),
+              ),
             ),
           );
 
@@ -410,7 +420,7 @@ class _Channel extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Container(
-      width: 64,
+      constraints: const BoxConstraints(minWidth: 64),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,

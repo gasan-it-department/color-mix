@@ -8,9 +8,10 @@ import 'package:colormix_studio/features/color_studio/widgets/labels_sheet.dart'
 import 'package:colormix_studio/features/color_studio/widgets/palette_grid.dart';
 import 'package:colormix_studio/features/color_studio/widgets/recipe_panel.dart';
 import 'package:colormix_studio/features/color_studio/widgets/target_card.dart';
+import 'package:colormix_studio/shared/data/demo_catalog.dart';
 
-/// two panes from 840 px (picker | target + recipe), on phones the target
-/// sits in a pinned strip and the recipe opens in a sheet
+/// A shade library beside a live target on desktop. On phones, keep the
+/// current target in view while the shade library scrolls underneath it.
 class ColorStudioScreen extends StatelessWidget {
   const ColorStudioScreen({super.key});
 
@@ -33,10 +34,11 @@ class ColorStudioScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: _PickerPane(
-                    padding: EdgeInsets.fromLTRB(24, 8, 12, 24),
+                    showIntro: true,
+                    padding: EdgeInsets.fromLTRB(32, 12, 28, 32),
                   ),
                 ),
-                SizedBox(width: 360, child: _SidePane()),
+                SizedBox(width: 344, child: _SidePane()),
               ],
             );
           }
@@ -46,7 +48,7 @@ class ColorStudioScreen extends StatelessWidget {
               const TargetStrip(),
               Expanded(
                 child: _PickerPane(
-                  padding: pagePadding(context).copyWith(top: 16),
+                  padding: pagePadding(context).copyWith(top: 8),
                 ),
               ),
             ],
@@ -63,24 +65,45 @@ class _SidePane extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(12, 8, 24, 24),
-      children: const [TargetCard(), SizedBox(height: 12), RecipePanel()],
+      padding: const EdgeInsets.fromLTRB(0, 12, 24, 24),
+      children: const [TargetCard(), SizedBox(height: 16), RecipePanel()],
     );
   }
 }
 
 class _PickerPane extends ConsumerWidget {
-  const _PickerPane({required this.padding});
+  const _PickerPane({required this.padding, this.showIntro = false});
 
   final EdgeInsets padding;
+  final bool showIntro;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(studioModeProvider);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     return ListView(
       padding: padding,
       children: [
+        if (showIntro) ...[
+          Text(
+            'A shade to start with.',
+            style: theme.textTheme.headlineLarge?.copyWith(
+              fontFamily: 'StudioSerif',
+              fontWeight: FontWeight.w400,
+              letterSpacing: -0.8,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${demoShades.length} demo shades. Or a color of your own.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
         SegmentedButton<StudioMode>(
           showSelectedIcon: false,
           expandedInsets: EdgeInsets.zero,
@@ -92,7 +115,7 @@ class _PickerPane extends ConsumerWidget {
             ),
             ButtonSegment(
               value: StudioMode.custom,
-              icon: Icon(Icons.colorize_outlined),
+              icon: Icon(Icons.tune),
               label: Text('Custom color'),
             ),
           ],
@@ -100,7 +123,7 @@ class _PickerPane extends ConsumerWidget {
           onSelectionChanged: (s) =>
               ref.read(studioModeProvider.notifier).set(s.first),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: showIntro ? 24 : 16),
         switch (mode) {
           StudioMode.palette => const PaletteGrid(),
           StudioMode.custom => const CustomPicker(),

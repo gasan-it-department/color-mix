@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:colormix_studio/core/utils/color_utils.dart';
-import 'package:colormix_studio/core/widgets/empty_state.dart';
-import 'package:colormix_studio/core/widgets/section_card.dart';
 import 'package:colormix_studio/features/color_studio/color_target.dart';
 import 'package:colormix_studio/features/color_studio/widgets/recipe_panel.dart';
 import 'package:colormix_studio/shared/data/demo_catalog.dart';
 import 'package:colormix_studio/shared/widgets/label_tag.dart';
 
-/// big swatch + numbers for the current target
+/// A color reference with its exact digital values. Dye colors never inherit
+/// interface tints, shadows or decorative overlays.
 class TargetCard extends ConsumerWidget {
   const TargetCard({super.key});
 
@@ -19,16 +18,7 @@ class TargetCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    if (target == null) {
-      return const SectionCard(
-        child: EmptyState(
-          compact: true,
-          icon: Icons.palette_outlined,
-          title: 'No color picked',
-          message: 'Choose a demo shade or make your own color.',
-        ),
-      );
-    }
+    if (target == null) return const _UnselectedTarget();
 
     final rgb = target.rgb;
     final shade = target.shade;
@@ -39,8 +29,7 @@ class TargetCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
+            Container(
               height: 132,
               decoration: BoxDecoration(
                 color: colorFromRgb(rgb),
@@ -49,32 +38,172 @@ class TargetCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 14),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(target.name, style: theme.textTheme.titleLarge),
-                ),
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: LabelTag(
-                    target.isCustom ? 'Custom color' : 'Demo shade',
-                    tone: TagTone.accent,
-                  ),
-                ),
-              ],
+            Text(
+              target.name,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontFamily: 'StudioSerif',
+                fontWeight: FontWeight.w400,
+                letterSpacing: -0.4,
+              ),
             ),
-            const SizedBox(height: 10),
-            _Fact('HEX', hexFromRgb(rgb)),
-            _Fact(
-              'RGB',
-              '${(rgb >> 16) & 0xFF}, ${(rgb >> 8) & 0xFF}, ${rgb & 0xFF}',
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: LabelTag(
+                target.isCustom ? 'Custom color' : 'Demo shade',
+                tone: TagTone.accent,
+              ),
             ),
-            if (shade?.levelTone != null) _Fact('Level', shade!.levelTone!),
-            if (shade != null) _Fact('Family', categoryLabel(shade.category)),
+            const SizedBox(height: 14),
+            LayoutBuilder(
+              builder: (context, c) {
+                final factWidth = (c.maxWidth - 12) / 2;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    SizedBox(
+                      width: factWidth,
+                      child: _Fact('HEX', hexFromRgb(rgb)),
+                    ),
+                    SizedBox(
+                      width: factWidth,
+                      child: _Fact(
+                        'RGB',
+                        '${(rgb >> 16) & 0xFF}, ${(rgb >> 8) & 0xFF}, ${rgb & 0xFF}',
+                      ),
+                    ),
+                    if (shade?.levelTone != null)
+                      SizedBox(
+                        width: factWidth,
+                        child: _Fact('Level', shade!.levelTone!),
+                      ),
+                    if (shade != null)
+                      SizedBox(
+                        width: factWidth,
+                        child: _Fact('Family', categoryLabel(shade.category)),
+                      ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 14),
+            const Divider(),
             const SizedBox(height: 12),
             const _VisualTargetNote(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _UnselectedTarget extends StatelessWidget {
+  const _UnselectedTarget();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'YOUR COLOR TARGET',
+              style: theme.textTheme.labelSmall?.copyWith(
+                letterSpacing: 1.3,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ExcludeSemantics(
+              child: SizedBox(
+                height: 136,
+                child: Center(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Transform.rotate(
+                        angle: -0.2,
+                        child: Container(
+                          width: 104,
+                          height: 124,
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: scheme.outlineVariant),
+                          ),
+                        ),
+                      ),
+                      Transform.translate(
+                        offset: const Offset(22, 0),
+                        child: Transform.rotate(
+                          angle: 0.14,
+                          child: Container(
+                            width: 104,
+                            height: 124,
+                            decoration: BoxDecoration(
+                              color: scheme.surfaceContainerLowest,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: scheme.outlineVariant),
+                            ),
+                            padding: const EdgeInsets.all(10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: scheme.primaryContainer,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Icon(
+                                      Icons.add,
+                                      color: scheme.primary,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Divider(color: scheme.outlineVariant),
+                                const SizedBox(height: 6),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No color picked',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontFamily: 'StudioSerif',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Choose a demo shade or make your own color.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            Text(
+              'Your target and recipe will appear here.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       ),
@@ -91,30 +220,25 @@ class _Fact extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 64,
-            child: Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            letterSpacing: 0.6,
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -129,12 +253,12 @@ class _VisualTargetNote extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.visibility_outlined, size: 18, color: muted),
+        Icon(Icons.visibility_outlined, size: 16, color: muted),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            'Visual target only. The real result depends on the starting '
-            'hair color, underlying pigment, porosity and the product.',
+            'Visual target only. Results depend on the starting hair, '
+            'underlying pigment, porosity and product.',
             style: theme.textTheme.bodySmall?.copyWith(color: muted),
           ),
         ),
@@ -143,9 +267,7 @@ class _VisualTargetNote extends StatelessWidget {
   }
 }
 
-// ── phone strip ────────────────────────────────────────────
-
-/// pinned above the picker on phones so the live colour is always in view
+/// Pinned above the picker on phones, with the recipe one tap away.
 class TargetStrip extends ConsumerWidget {
   const TargetStrip({super.key});
 
@@ -162,64 +284,68 @@ class TargetStrip extends ConsumerWidget {
       final t => '${hexFromRgb(t.rgb)} · Demo shade',
     };
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 8, 12),
-        child: Row(
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: target == null
-                    ? scheme.surfaceContainerHigh
-                    : colorFromRgb(target.rgb),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: scheme.outlineVariant),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerLowest,
+          border: Border.all(color: scheme.outlineVariant),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: target == null
+                      ? scheme.primaryContainer
+                      : colorFromRgb(target.rgb),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: scheme.outlineVariant),
+                ),
+                child: target == null
+                    ? Icon(
+                        Icons.colorize_outlined,
+                        size: 20,
+                        color: scheme.primary,
+                      )
+                    : null,
               ),
-              child: target == null
-                  ? Icon(
-                      Icons.palette_outlined,
-                      size: 20,
-                      color: scheme.onSurfaceVariant,
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    target?.name ?? 'No color picked',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      target?.name ?? 'No color picked',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            if (target != null)
-              TextButton(
-                onPressed: () => showTargetDetails(context),
-                child: const Text('Details'),
-              ),
-          ],
+              if (target != null)
+                TextButton(
+                  onPressed: () => showTargetDetails(context),
+                  child: const Text('Details'),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -227,7 +353,6 @@ class TargetStrip extends ConsumerWidget {
 }
 
 Future<void> showTargetDetails(BuildContext context) {
-  // root navigator so the sheet covers the bottom bar too
   return showModalBottomSheet<void>(
     context: context,
     useRootNavigator: true,
@@ -241,7 +366,7 @@ Future<void> showTargetDetails(BuildContext context) {
         padding: EdgeInsets.fromLTRB(16, 0, 16, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [TargetCard(), SizedBox(height: 12), RecipePanel()],
+          children: [TargetCard(), SizedBox(height: 16), RecipePanel()],
         ),
       ),
     ),

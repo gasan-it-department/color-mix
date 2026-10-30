@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,16 +20,14 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final narrow = MediaQuery.sizeOf(context).width < Breakpoints.rail;
-
     return AppPage(
       title: 'Home',
-      // the rail already shows the brand on wider screens
       titleWidget: narrow ? const BrandLockup() : null,
       body: ListView(
         padding: pagePadding(context),
         children: [
-          const _QuickActions(),
-          const SizedBox(height: 16),
+          const _StudioWelcome(),
+          const SizedBox(height: 24),
           LayoutBuilder(
             builder: (context, c) {
               if (c.maxWidth >= 760) {
@@ -35,7 +35,7 @@ class DashboardScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(flex: 3, child: _RecentFormulas()),
-                    SizedBox(width: 16),
+                    SizedBox(width: 20),
                     Expanded(flex: 2, child: _ScaleStatusCard()),
                   ],
                 );
@@ -49,143 +49,179 @@ class DashboardScreen extends StatelessWidget {
               );
             },
           ),
+          const SizedBox(height: 24),
+          Text(
+            'Made for the mixing bench. Your formulas stay on this device.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-// ── quick actions ──────────────────────────────────────────
-
-class _QuickActions extends StatelessWidget {
-  const _QuickActions();
-
-  @override
-  Widget build(BuildContext context) {
-    final newFormula = _ActionTile(
-      icon: Icons.add,
-      label: 'New color formula',
-      caption: 'Pick a target and set the amounts',
-      tinted: true,
-      onTap: () => context.go(Routes.colors),
-    );
-    final connect = _ActionTile(
-      icon: Icons.bluetooth,
-      label: 'Connect scale',
-      caption: 'ColorMix scale or simulator',
-      onTap: () => context.go(Routes.scale),
-    );
-    final saved = _ActionTile(
-      icon: Icons.receipt_long_outlined,
-      label: 'Saved formulas',
-      caption: 'Reuse and weigh again',
-      onTap: () => context.go(Routes.formulas),
-    );
-
-    return LayoutBuilder(
-      builder: (context, c) {
-        if (c.maxWidth >= 640) {
-          return IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(child: newFormula),
-                const SizedBox(width: 12),
-                Expanded(child: connect),
-                const SizedBox(width: 12),
-                Expanded(child: saved),
-              ],
-            ),
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            newFormula,
-            const SizedBox(height: 12),
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: connect),
-                  const SizedBox(width: 12),
-                  Expanded(child: saved),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _ActionTile extends StatelessWidget {
-  const _ActionTile({
-    required this.icon,
-    required this.label,
-    required this.caption,
-    required this.onTap,
-    this.tinted = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final String caption;
-  final VoidCallback onTap;
-
-  /// the main action gets the pale rose wash, the rest stay outlined
-  final bool tinted;
+class _StudioWelcome extends StatelessWidget {
+  const _StudioWelcome();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final fg = tinted ? scheme.onPrimaryContainer : scheme.onSurface;
-
-    return Material(
-      color: tinted ? scheme.primaryContainer : scheme.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: tinted
-            ? BorderSide.none
-            : BorderSide(color: scheme.outlineVariant),
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(24),
       ),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                icon,
-                color: tinted ? scheme.primary : scheme.onSurfaceVariant,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                style: theme.textTheme.titleSmall?.copyWith(color: fg),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                caption,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: tinted
-                      ? scheme.onPrimaryContainer.withValues(alpha: 0.8)
-                      : scheme.onSurfaceVariant,
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final wide = c.maxWidth >= 700;
+          return Padding(
+            padding: EdgeInsets.all(wide ? 32 : 22),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'A LITTLE COLOR. A LOT OF POSSIBILITY.',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: scheme.onPrimaryContainer,
+                          letterSpacing: 1.2,
+                          fontSize: 10,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        'Your next color\nstarts here.',
+                        style:
+                            (wide
+                                    ? theme.textTheme.displayMedium
+                                    : theme.textTheme.headlineLarge)
+                                ?.copyWith(
+                                  color: scheme.onPrimaryContainer,
+                                  fontSize: wide ? 44 : 32,
+                                ),
+                      ),
+                      const SizedBox(height: 12),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 370),
+                        child: Text(
+                          'Choose a target shade, build your formula, and follow every gram.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: scheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: () => context.go(Routes.colors),
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('New color formula'),
+                          ),
+                          TextButton.icon(
+                            onPressed: () => context.go(Routes.formulas),
+                            icon: const Icon(Icons.arrow_outward, size: 16),
+                            label: const Text('Saved formulas'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
+                if (wide) ...[
+                  const SizedBox(width: 24),
+                  const Expanded(
+                    flex: 3,
+                    child: ExcludeSemantics(
+                      child: SizedBox(
+                        height: 250,
+                        child: CustomPaint(painter: _SwatchFanPainter()),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 }
 
-// ── recent formulas ────────────────────────────────────────
+/// Decorative paper swatches, separate from the target-color UI.
+class _SwatchFanPainter extends CustomPainter {
+  const _SwatchFanPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const colors = [
+      Color(0xFF75543F),
+      Color(0xFFB58064),
+      Color(0xFFD1AB94),
+      Color(0xFFE7CCAE),
+    ];
+    final scale = math.min(size.width / 280, size.height / 250);
+    canvas.save();
+    canvas.translate(size.width / 2, size.height * 0.86);
+    canvas.scale(scale);
+    for (var i = 0; i < colors.length; i++) {
+      canvas.save();
+      canvas.rotate((-30 + i * 22) * math.pi / 180);
+      final paper = RRect.fromRectAndRadius(
+        const Rect.fromLTWH(-40, -206, 82, 216),
+        const Radius.circular(9),
+      );
+      canvas.drawShadow(
+        Path()..addRRect(paper),
+        const Color(0xFF283125).withValues(alpha: 0.25),
+        4,
+        true,
+      );
+      canvas.drawRRect(paper, Paint()..color = const Color(0xFFFAF6EC));
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          const Rect.fromLTWH(-34, -200, 70, 158),
+          const Radius.circular(5),
+        ),
+        Paint()..color = colors[i],
+      );
+      canvas.drawLine(
+        const Offset(-26, -26),
+        const Offset(12, -26),
+        Paint()
+          ..color = const Color(0xFFB3AB99)
+          ..strokeWidth = 2,
+      );
+      canvas.drawLine(
+        const Offset(-26, -18),
+        const Offset(-5, -18),
+        Paint()
+          ..color = const Color(0xFFD9D3C5)
+          ..strokeWidth = 2,
+      );
+      canvas.drawCircle(
+        Offset.zero,
+        4,
+        Paint()..color = const Color(0xFF8F947B),
+      );
+      canvas.restore();
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _SwatchFanPainter oldDelegate) => false;
+}
 
 class _RecentFormulas extends ConsumerWidget {
   const _RecentFormulas();
@@ -194,10 +230,9 @@ class _RecentFormulas extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final recent = ref.watch(recentFormulasProvider);
     final hasAny = recent.value?.isNotEmpty ?? false;
-
     return SectionCard(
       title: 'Recent formulas',
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       trailing: hasAny
           ? TextButton(
               onPressed: () => context.go(Routes.formulas),
@@ -209,7 +244,7 @@ class _RecentFormulas extends ConsumerWidget {
           compact: true,
           icon: Icons.receipt_long_outlined,
           title: 'No saved formulas yet',
-          message: 'Formulas you save will show up here.',
+          message: 'Save a mix you love and come back to it here.',
         ),
         AsyncData(:final value) => Column(
           children: [for (final f in value) FormulaTile(formula: f)],
@@ -230,8 +265,6 @@ class _RecentFormulas extends ConsumerWidget {
   }
 }
 
-// ── scale status ───────────────────────────────────────────
-
 class _ScaleStatusCard extends ConsumerWidget {
   const _ScaleStatusCard();
 
@@ -241,42 +274,40 @@ class _ScaleStatusCard extends ConsumerWidget {
     final connected = scale.isConnected;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-
     return SectionCard(
-      title: 'Scale',
+      title: 'At the mixing bench',
+      padding: const EdgeInsets.all(20),
+      trailing: Icon(Icons.sensors_outlined, size: 22, color: scheme.primary),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                width: 10,
-                height: 10,
+                width: 8,
+                height: 8,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: connected ? context.status.success : scheme.outline,
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                connected ? 'Connected' : 'Not connected',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Text(
+                  connected ? 'Connected' : 'Not connected',
+                  style: theme.textTheme.titleSmall,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
-            connected
-                ? scale.device!.info.name
-                : 'Connect the ColorMix scale, or use the simulated scale '
-                      'to practice.',
+            connected ? scale.device!.info.name : 'Connect your ColorMix scale, or explore the process with the simulator.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           OutlinedButton.icon(
             onPressed: () => context.go(Routes.scale),
             icon: const Icon(Icons.bluetooth_searching, size: 18),

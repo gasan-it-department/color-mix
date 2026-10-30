@@ -111,33 +111,53 @@ class _Detail extends ConsumerWidget {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 760),
+        constraints: const BoxConstraints(maxWidth: 880),
         child: ListView(
           padding: EdgeInsets.fromLTRB(
             narrow ? 16 : 24,
-            8,
+            16,
             narrow ? 16 : 24,
             32,
           ),
           children: [
-            SectionCard(
+            Container(
+              padding: EdgeInsets.all(narrow ? 18 : 28),
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: scheme.outlineVariant),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    'MIX RECORD',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.primary,
+                      letterSpacing: 1.8,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
                           s.formulaName,
-                          style: theme.textTheme.titleLarge,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontFamily: 'StudioSerif',
+                            fontSize: narrow ? 28 : 36,
+                            height: 1.15,
+                            letterSpacing: -0.5,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       LabelTag(look.label, tone: look.tone),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 12),
                   Text(
                     [
                       sessionWhen.format(s.startedAt),
@@ -151,9 +171,11 @@ class _Detail extends ConsumerWidget {
                     const SizedBox(height: 8),
                     Text(note, style: theme.textTheme.bodyMedium),
                   ],
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
+                  const Divider(),
+                  const SizedBox(height: 18),
                   Wrap(
-                    spacing: 32,
+                    spacing: narrow ? 20 : 56,
                     runSpacing: 12,
                     children: [
                       _Stat(
@@ -178,12 +200,17 @@ class _Detail extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
             SectionCard(
               title: 'Each step',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Text(
+                    'The planned amount and what went into the bowl.',
+                    style: muted,
+                  ),
+                  const SizedBox(height: 16),
                   DeviationTable.ofSession(s, toleranceMg: toleranceMg),
                   const SizedBox(height: 8),
                   const Divider(),
@@ -251,6 +278,11 @@ class _Stat extends StatelessWidget {
         Text(
           value,
           style: theme.textTheme.titleLarge?.copyWith(
+            fontFamily: 'StudioSans',
+            fontSize: 26,
+            height: 1.5,
+            letterSpacing: -0.8,
+            color: strong ? theme.colorScheme.primary : null,
             fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),

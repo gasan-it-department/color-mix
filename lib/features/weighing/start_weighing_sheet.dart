@@ -80,51 +80,30 @@ class _StartSheetState extends ConsumerState<_StartSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Ready to weigh', style: theme.textTheme.titleLarge),
+            Text(
+              'Ready to weigh',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontFamily: 'StudioSerif',
+              ),
+            ),
+            const SizedBox(height: 4),
             Text(f.name, style: muted),
             const SizedBox(height: 16),
             Text('Order', style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             for (final (i, step) in steps.indexed)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    SizedBox(width: 20, child: Text('${i + 1}', style: muted)),
-                    ColorSwatchDot(rgb: step.rgb, size: 18),
-                    const SizedBox(width: 10),
-                    // the form on its own line, a phone has no room beside
-                    // the name and the two amounts
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(step.name, style: theme.textTheme.bodyMedium),
-                          Text(step.form.label, style: muted),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      'add ${formatMilligrams(step.targetAddedMg)}',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 92,
-                      child: Text(
-                        '→ ${formatMilligrams(totals[i])}',
-                        textAlign: TextAlign.end,
-                        style: muted,
-                      ),
-                    ),
-                  ],
-                ),
+              _OrderStep(
+                index: i,
+                step: step,
+                cumulativeMg: totals[i],
+                unit: f.unit,
               ),
             const SizedBox(height: 6),
             Text(
               'Everything goes in one bowl. The scale is zeroed once with the '
-              'empty bowl, not between colors.',
+              'empty bowl, not between colors.'
+              '${f.unit == MeasureUnit.g ? '' : ' The scale reads grams, so '
+                        'each step has its grams under the name.'}',
               style: muted,
             ),
             if (ratio != null) ...[
@@ -223,6 +202,87 @@ class _StartSheetState extends ConsumerState<_StartSheet> {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _OrderStep extends StatelessWidget {
+  const _OrderStep({
+    required this.index,
+    required this.step,
+    required this.cumulativeMg,
+    required this.unit,
+  });
+
+  final int index;
+  final StepPlan step;
+  final int cumulativeMg;
+
+  /// the formula's own unit for "add"; the running total is what the scale
+  /// will read, so that one stays in grams
+  final MeasureUnit unit;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+    );
+    final add = unit.format(
+      step.targetAddedMg,
+      densityMilli: step.densityMilli,
+    );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final narrow = constraints.maxWidth < 420;
+          final amounts = Wrap(
+            spacing: 16,
+            runSpacing: 2,
+            children: [
+              Text(
+                'add $add',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              Text('→ ${formatMilligrams(cumulativeMg)}', style: muted),
+            ],
+          );
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: 24, child: Text('${index + 1}', style: muted)),
+              ColorSwatchDot(rgb: step.rgb, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(step.name, style: theme.textTheme.bodyMedium),
+                    Text(
+                      unit == MeasureUnit.g
+                          ? step.form.label
+                          : '${step.form.label} · '
+                                '${formatMilligrams(step.targetAddedMg)}',
+                      style: muted,
+                    ),
+                    if (narrow) ...[const SizedBox(height: 4), amounts],
+                  ],
+                ),
+              ),
+              if (!narrow) ...[const SizedBox(width: 12), amounts],
+            ],
+          );
+        },
       ),
     );
   }

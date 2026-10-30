@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:colormix_studio/shared/models/measure_unit.dart';
+
 class AppSettings {
   const AppSettings({
     this.themeMode = ThemeMode.system,
@@ -9,6 +11,7 @@ class AppSettings {
     this.defaultDyeDg = 600,
     this.stabilityThresholdMg = 200,
     this.stabilityDwellMs = 800,
+    this.formulaUnit = MeasureUnit.g,
     this.lastScaleId,
     this.lastScaleName,
   });
@@ -30,6 +33,9 @@ class AppSettings {
   final int stabilityThresholdMg;
   final int stabilityDwellMs;
 
+  /// the unit last picked in the editor, new formulas start in it
+  final MeasureUnit formulaUnit;
+
   /// the ble scale used last, so it can be reconnected without a scan
   final String? lastScaleId;
   final String? lastScaleName;
@@ -42,6 +48,7 @@ class AppSettings {
     int? defaultDyeDg,
     int? stabilityThresholdMg,
     int? stabilityDwellMs,
+    MeasureUnit? formulaUnit,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -51,6 +58,7 @@ class AppSettings {
       defaultDyeDg: defaultDyeDg ?? this.defaultDyeDg,
       stabilityThresholdMg: stabilityThresholdMg ?? this.stabilityThresholdMg,
       stabilityDwellMs: stabilityDwellMs ?? this.stabilityDwellMs,
+      formulaUnit: formulaUnit ?? this.formulaUnit,
       lastScaleId: lastScaleId,
       lastScaleName: lastScaleName,
     );
@@ -65,6 +73,7 @@ class AppSettings {
     defaultDyeDg: defaultDyeDg,
     stabilityThresholdMg: stabilityThresholdMg,
     stabilityDwellMs: stabilityDwellMs,
+    formulaUnit: formulaUnit,
     lastScaleId: id,
     lastScaleName: id == null ? null : name,
   );

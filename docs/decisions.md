@@ -120,7 +120,7 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 ## Product form (after phase 8)
 
 - Each color and the developer is a cream, a liquid or a powder (`lib/shared/models/product_form.dart`). It's recorded, it's shown, and it changes the pour guidance. It never changes an amount: everything is still weighed in grams.
-- No volume conversion. A liquid's instructions may give mL, but 1 mL isn't 1 g and the density differs per product, so the app would be guessing. The developer card already says the ratios are by weight, and the start sheet asks to confirm it.
+- No volume conversion at first. A liquid's instructions may give mL, but 1 mL isn't 1 g and the density differs per product, so the app would be guessing. The developer card already says the ratios are by weight, and the start sheet asks to confirm it. Units of measure (below) added mL later, with a density per product the stylist can set.
 - The slow-down band (where the screen turns amber) depends on the form. Cream keeps what weighing always used: 1 g or a tenth of the step. Liquid runs fast and keeps dripping after you stop, so 2 g or 15%. Powder goes in by the spoonful and a spoonful can be a few grams, so 1.5 g or 10%. These are first guesses, like the tolerance, until the scale has seen real products.
 - A hint under "Keep pouring" and "Almost there" per form: squeeze, pour, spoon. Nothing once it's on target or over, the overshoot panel has its own words.
 - The developer is cream or liquid only, there's no powder developer.
@@ -136,6 +136,17 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 - The open picker takes any file type: some Android file managers label .json as plain bytes, and a filter would hide the backup. The contents decide.
 - Release APKs are signed with an upload key made on 2026-10-29 (`android/upload-keystore.jks`, RSA 2048, valid to 2054, password in `android/key.properties`). Both git-ignored, and the README says to keep a copy: an update only installs over the app with the same key. Gradle falls back to the debug key with a warning when `key.properties` isn't there, so the project still builds on another PC.
 - `--split-per-abi` for handing out: the arm64 APK is about a third of the universal one.
+
+## Units of measure (after phase 8)
+
+- A formula's amounts can be typed and shown in g, oz, mL or fl oz (`lib/shared/models/measure_unit.dart`). It's display and entry only. Underneath it's grams like before: stored in dg, weighed in grams, the shares and the developer ratio by weight. The scale only reads grams, so nothing about weighing changed.
+- The unit picker is a "g ▾" menu inside the dye field, like a color's form inside its name field. mL and fl oz say "(by volume)" in the menu. The last one picked is kept in settings (`formula_unit`) and new formulas start in it. Each saved formula keeps its own.
+- Ounces are exact (28.349523125 g). mL goes through a density, g per mL. Each color and the developer gets one: what the stylist typed from the product sheet, or the form's usual figure (cream and liquid 1.00, powder 0.50). Those are rough, so a Density card shows up in mL and fl oz with every product's figure as a hint and a short note that the sheet has the real one. 0.20 to 3.00 accepted.
+- A typed volume of dye becomes grams through the colors' mixed density. The shares are by weight, so that's the weighted harmonic mean, kept unrounded so 60 mL typed shows as 60.0 mL again. A volume total adds up product by product, each through its own density: a powder takes twice the room of a cream of the same weight.
+- Switching units mustn't change the recipe: 60.0 g is 2.12 oz, and 2.12 oz read back is 60.1 g. So the editor pins the exact grams behind a converted number until it's typed over. In mL the pin also lets go once the densities, forms or shares move the volume off what the field says: the field is what the stylist reads, so the field wins.
+- Weighing stays in grams everywhere it reads the scale (live number, remaining, running totals, history). Where a formula amount is shown it's in the formula's unit with the grams next to it: "add 40.0 mL" with "Powder · 20.0 g" under the name on the start sheet, "of 20.0 g · 40.0 mL" while pouring, "80.0 g on the scale" under the mixture. The 1 kg limit and "works out to 0.0 g" stay in grams, they're about the scale.
+- Schema v4: `formulas.unit` (g by default, so every older formula reads as grams), `formulas.developer_density_milli` and `formula_ingredients.density_milli`, both null for the usual figure. Backups carry them too. An older file without them restores in grams, still backup version 1. The migration test now builds v1, v2 and v3 databases.
+- The enum field for "grams" / "ounces" is `label`, not `name`. `name` is the enum's own and goes into the db, settings and backups. Called `name` at first, it shadowed the real one and wrote "grams" where "g" was read back.
 
 ## Firmware (phase 5)
 

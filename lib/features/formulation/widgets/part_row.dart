@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:colormix_studio/core/utils/weight_format.dart';
 import 'package:colormix_studio/shared/models/product_form.dart';
 import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
 
@@ -16,7 +15,7 @@ class PartRow extends StatelessWidget {
     required this.onChanged,
     required this.form,
     required this.onForm,
-    this.weightDg,
+    this.amount = '—',
     this.nameError,
     this.percentError,
     this.onRemove,
@@ -28,7 +27,9 @@ class PartRow extends StatelessWidget {
   final VoidCallback onChanged;
   final ProductForm form;
   final ValueChanged<ProductForm> onForm;
-  final int? weightDg;
+
+  /// worked out, already in the formula's unit: '30.0 g', '1.06 oz'
+  final String amount;
   final String? nameError;
   final String? percentError;
 
@@ -100,12 +101,18 @@ class PartRow extends StatelessWidget {
       ),
     );
 
-    final weight = SizedBox(
-      width: 72,
+    final weight = Container(
+      constraints: const BoxConstraints(minWidth: 72),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Text(
-        weightDg == null ? '—' : formatDecigrams(weightDg!),
+        amount,
         textAlign: TextAlign.end,
-        style: theme.textTheme.titleMedium?.copyWith(
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w700,
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
       ),
@@ -156,10 +163,10 @@ class PartRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(width: 36),
-                SizedBox(width: 120, child: percent),
-                const Spacer(),
+                Expanded(child: percent),
+                const SizedBox(width: 12),
                 Padding(padding: const EdgeInsets.only(top: 10), child: weight),
-                const SizedBox(width: 48),
+                const SizedBox(width: 8),
               ],
             ),
           ],

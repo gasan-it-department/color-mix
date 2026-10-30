@@ -2,14 +2,14 @@
 
 Hair color formula + Bluetooth scale prototype. A Flutter app (Android first, Windows desktop, iOS later) and ESP32 + HX711 scale firmware in `firmware/`.
 
-Pick a target color, set Color A/B/C percentages and a total, get exact gram amounts, then weigh them into one bowl on the scale with live readings, one ingredient on top of the other. Works offline, no account, no server.
+Pick a target color, set Color A/B/C percentages and a total, get exact amounts (grams, ounces, mL or fl oz), then weigh them into one bowl on the scale with live readings, one ingredient on top of the other. Works offline, no account, no server.
 
 Demo formulas are examples only, not product-validated. The color on screen is a target, not a promise of what the dye does on hair. Always follow the dye maker's mixing instructions.
 
 ## What's in it
 
 - **Color Studio**: demo palette (labelled as demo), custom colors by picker, hex or RGB, the nearest demo shade for a custom color
-- **Formula**: 1 to 3 colors by percentage, developer by weight ratio, exact gram amounts that always add up, plain messages for anything that doesn't. Each color and the developer is marked cream, liquid or powder
+- **Formula**: 1 to 3 colors by percentage, developer by weight ratio, exact gram amounts that always add up, plain messages for anything that doesn't. Each color and the developer is marked cream, liquid or powder. Amounts in g, oz, mL or fl oz, picked in the dye field: mL goes through each product's density (g per mL), and the scale still weighs grams
 - **Weighing**: zero once with the bowl on, then each ingredient poured to a cumulative target. Live reading, remaining, progress, steady or not, amber close, green on target, red over. A liquid turns amber sooner than a cream, and each form gets its own pouring hint. Overshoot is shown and recorded, never "fixed" by changing the other amounts
 - **Scale**: the ColorMix scale over BLE, or a simulated scale that runs everything without hardware. Calibration wizard and a scale check (connection test, noise)
 - **Saved**: formulas with search, duplicate, delete, and every weighing session with what was really poured
@@ -102,7 +102,7 @@ A standard Bluetooth weight scale (0x181D) connects too but is marked experiment
 - **Temperature drift isn't compensated**, re-zero or recalibrate after moving the scale somewhere warmer or colder
 - **No sync.** Formulas and sessions live on the device. Settings, Backup saves them to a file you keep. Uninstalling without one loses them
 - Developer ratio and volume are recorded as entered, the app doesn't check them against any product
-- **Grams only.** A product whose instructions are in mL has to be converted by its maker's numbers, the app doesn't know densities. The slow-down bands for liquid and powder are first guesses
+- **mL and fl oz are only as right as the density.** The usual figures (1.00 for creams and liquids, 0.50 for a powder) are rough, the product sheet has the real one. Shares and the developer ratio stay by weight in every unit. The slow-down bands for liquid and powder are first guesses
 
 ## Layout
 
@@ -121,9 +121,10 @@ Shell: bottom bar under 600 px, icon rail up to 1100 px, labelled sidebar above 
 
 ## Units
 
-No doubles in the formula maths.
+No doubles in the formula maths, only at the edge where a typed oz or mL becomes milligrams and back.
 
-- weights: int decigrams (`dg`, 0.1 g)
+- weights: int decigrams (`dg`, 0.1 g), whatever unit the formula is shown in
+- densities: int g per mL × 1000 (1000 = 1.00)
 - scale readings: int milligrams (`mg`)
 - percentages: int hundredths of a percent (10000 = 100%)
 - colors: int `0xRRGGBB`

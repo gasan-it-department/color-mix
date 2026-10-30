@@ -106,8 +106,7 @@ class AppShell extends StatelessWidget {
   }
 }
 
-/// gmail-style sidebar for wide screens: whole row is the pill, the
-/// selected one gets the rose wash and bold label
+/// Persistent workspace navigation for a wide studio workbench.
 class _Sidebar extends StatelessWidget {
   const _Sidebar({required this.selected, required this.onSelect});
 
@@ -116,32 +115,83 @@ class _Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
       width: 240,
+      color: scheme.surfaceContainerLowest,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(12, 0, 12, 24),
-              child: BrandLockup(),
-            ),
-            for (final (i, d) in _destinations.indexed)
-              _SidebarItem(
-                icon: i == selected ? d.selectedIcon : d.icon,
-                label: d.label,
-                selected: i == selected,
-                onTap: () => onSelect(i),
+        padding: const EdgeInsets.fromLTRB(16, 28, 16, 20),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(12, 0, 12, 44),
+                child: BrandLockup(),
               ),
-            const Spacer(),
-            _SidebarItem(
-              icon: Icons.settings_outlined,
-              label: 'Settings',
-              selected: false,
-              onTap: () => context.push(Routes.settings),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 0, 14),
+                child: Text(
+                  'THE WORKSPACE',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    letterSpacing: 1.5,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+              for (final (i, d) in _destinations.indexed)
+                _SidebarItem(
+                  icon: i == selected ? d.selectedIcon : d.icon,
+                  label: d.label,
+                  selected: i == selected,
+                  onTap: () => onSelect(i),
+                ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 16,
+                          color: scheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Your personal studio',
+                            style: theme.textTheme.labelMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Formulas and sessions, saved on this device.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Divider(),
+              ),
+              _SidebarItem(
+                icon: Icons.settings_outlined,
+                label: 'Settings',
+                selected: false,
+                onTap: () => context.push(Routes.settings),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -165,38 +215,48 @@ class _SidebarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final fg = selected ? scheme.onPrimaryContainer : scheme.onSurfaceVariant;
+    final fg = selected ? scheme.onPrimary : scheme.onSurfaceVariant;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 2),
-      child: Material(
-        color: selected ? scheme.primaryContainer : Colors.transparent,
-        shape: const StadiumBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(
-            height: 44,
-            child: Row(
-              children: [
-                const SizedBox(width: 16),
-                Icon(icon, size: 22, color: fg),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: selected
-                          ? scheme.onPrimaryContainer
-                          : scheme.onSurface,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Semantics(
+        selected: selected,
+        button: true,
+        child: Material(
+          color: selected ? scheme.primary : Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: SizedBox(
+              height: 50,
+              child: Row(
+                children: [
+                  const SizedBox(width: 16),
+                  Icon(icon, size: 22, color: fg),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: selected ? scheme.onPrimary : scheme.onSurface,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-              ],
+                  const SizedBox(width: 12),
+                  if (selected) ...[
+                    Icon(Icons.arrow_forward, size: 17, color: fg),
+                    const SizedBox(width: 14),
+                  ],
+                ],
+              ),
             ),
           ),
         ),

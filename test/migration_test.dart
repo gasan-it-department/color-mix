@@ -10,7 +10,8 @@ import 'package:colormix_studio/shared/models/weighing_session.dart';
 // older databases built by hand the way their schema made them, with a row
 // or two in each table, then opened by today's app
 
-/// schema 1. v2 adds weighing_sessions.tolerance_mg, v3 the form columns
+/// schema 1. v2 adds weighing_sessions.tolerance_mg, v3 the form columns, v4
+/// the unit and densities
 void createV1(void Function(String sql) exec) {
   exec('''
     CREATE TABLE formulas (
@@ -105,45 +106,65 @@ AppDatabase openOld(int version) => AppDatabase(
         );
         db.execute('UPDATE weighing_sessions SET tolerance_mg = 300');
       }
+      if (version >= 3) {
+        for (final table in ['formula_ingredients', 'weighing_steps']) {
+          db.execute(
+            "ALTER TABLE $table ADD COLUMN form TEXT NOT NULL DEFAULT 'cream'",
+          );
+        }
+        db.execute(
+          'ALTER TABLE formulas ADD COLUMN developer_form TEXT NOT NULL '
+          "DEFAULT 'cream'",
+        );
+      }
       db.execute('PRAGMA user_version = $version');
     },
   ),
 );
 
 void main() {
-  for (final version in [1, 2]) {
-    test(
-      'a v$version database opens with everything kept, forms as cream',
-      () async {
-        final db = openOld(version);
-        addTearDown(db.close);
+  for (final version in [1, 2, 3]) {
+    test('a v$version database opens with everything kept, forms as cream, '
+        'grams', () async {
+      final db = openOld(version);
+      addTearDown(db.close);
 
-        final s = (await SessionRepository(db).load('old'))!;
-        expect(s.formulaName, 'Rose Gold Demo');
-        expect(s.status, SessionStatus.completed);
-        expect(s.measuredTotalMg, 121000);
-        // v1 never recorded a tolerance, v2 did
-        expect(s.toleranceMg, version == 1 ? isNull : 300);
-        expect(s.steps.single.actualAddedMg, 60100);
-        expect(s.steps.single.form, ProductForm.cream);
+      final s = (await SessionRepository(db).load('old'))!;
+      expect(s.formulaName, 'Rose Gold Demo');
+      expect(s.status, SessionStatus.completed);
+      expect(s.measuredTotalMg, 121000);
+      // v1 never recorded a tolerance, v2 did
+      expect(s.toleranceMg, version == 1 ? isNull : 300);
+      expect(s.steps.single.actualAddedMg, 60100);
+      expect(s.steps.single.form, ProductForm.cream);
 
-        final f = (await FormulaRepository(db).find('f'))!;
-        expect(f.ingredients.single.form, ProductForm.cream);
-        expect(f.developerForm, ProductForm.cream);
+      final f = (await FormulaRepository(db).find('f'))!;
+      expect(f.ingredients.single.form, ProductForm.cream);
+      expect(f.developerForm, ProductForm.cream);
+      expect(f.unit, MeasureUnit.g);
+      expect(f.ingredients.single.densityMilli, isNull);
+      expect(f.developerDensityMilli, isNull);
 
-        // and the new columns take a write
-        await FormulaRepository(db).save(
-          f.copyWith(
-            ingredients: [
-              f.ingredients.single.copyWith(form: ProductForm.powder),
-            ],
-            developerForm: ProductForm.liquid,
-          ),
-        );
-        final again = (await FormulaRepository(db).find('f'))!;
-        expect(again.ingredients.single.form, ProductForm.powder);
-        expect(again.developerForm, ProductForm.liquid);
-      },
-    );
+      // and the new columns take a write
+      await FormulaRepository(db).save(
+        f.copyWith(
+          ingredients: [
+            f.ingredients.single.copyWith(
+              form: ProductForm.powder,
+              densityMilli: () => 450,
+            ),
+          ],
+          developerForm: ProductForm.liquid,
+          developerDensityMilli: () => 1010,
+          unit: MeasureUnit.oz,
+        ),
+      );
+      final again = (await FormulaRepository(db).find('f'))!;
+      expect(again.ingredients.single.form, ProductForm.powder);
+      expect(again.ingredients.single.densityMilli, 450);
+      expect(again.developerForm, ProductForm.liquid);
+      expect(again.developerDensityMilli, 1010);
+      expect(again.unit, MeasureUnit.oz);
+    });
   }
 }

@@ -49,7 +49,9 @@ class BigWeight extends StatelessWidget {
         text,
         style: base.copyWith(
           fontSize: wide ? 96 : 64,
-          fontWeight: FontWeight.w600,
+          fontFamily: 'StudioSans',
+          fontWeight: FontWeight.w500,
+          letterSpacing: -2.5,
           height: 1.05,
           color: color,
           fontFeatures: const [FontFeature.tabularFigures()],
@@ -75,17 +77,28 @@ class StabilityChip extends StatelessWidget {
         ? (Icons.check_circle_outline, 'Steady', status.success)
         : (Icons.waves, 'Settling…', scheme.onSurfaceVariant);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: Theme.of(context).textTheme.bodyMedium
-              ?.copyWith(color: color, fontWeight: FontWeight.w600),
+    return Align(
+      alignment: Alignment.centerLeft,
+      widthFactor: 1,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
         ),
-      ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 6),
+            Text(
+              text,
+              style: Theme.of(context).textTheme.labelMedium
+                  ?.copyWith(color: color, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -124,26 +137,45 @@ class StatusBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: fg.withValues(alpha: 0.35)),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: fg),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(color: fg),
-                ),
-                const SizedBox(height: 2),
-                Text(message, style: theme.textTheme.bodyMedium),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final inlineAction = constraints.maxWidth >= 520;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(icon, color: fg),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: fg,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(message, style: theme.textTheme.bodyMedium),
+                      ],
+                    ),
+                  ),
+                  if (action != null && inlineAction) ...[
+                    const SizedBox(width: 8),
+                    action!,
+                  ],
+                ],
+              ),
+              if (action != null && !inlineAction) ...[
+                const SizedBox(height: 10),
+                Align(alignment: Alignment.centerLeft, child: action!),
               ],
-            ),
-          ),
-          if (action != null) ...[const SizedBox(width: 8), action!],
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -417,7 +449,7 @@ class StepList extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: current ? scheme.primaryContainer : null,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           children: [
@@ -451,9 +483,14 @@ class StepList extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(12),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+              child: Text('Mixing sequence', style: theme.textTheme.titleSmall),
+            ),
             row(done: zeroDone, current: zeroCurrent, title: 'Zero the scale'),
             for (final (i, step) in s.steps.indexed)
               row(

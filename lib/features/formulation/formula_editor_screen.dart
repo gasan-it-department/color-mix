@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,7 +23,10 @@ import 'package:colormix_studio/features/saved_formulas/formula_providers.dart';
 import 'package:colormix_studio/features/settings/settings_providers.dart';
 import 'package:colormix_studio/features/weighing/session_repository.dart';
 import 'package:colormix_studio/features/weighing/start_weighing_sheet.dart';
+import 'package:colormix_studio/features/weighing/weighing_state.dart'
+    show developerRgb;
 import 'package:colormix_studio/shared/models/color_formula.dart';
+import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
 import 'package:colormix_studio/shared/widgets/label_tag.dart';
 
 /// new formula for the picked color, or a saved one by id
@@ -48,8 +53,14 @@ class FormulaEditorScreen extends ConsumerWidget {
           ),
         );
       }
-      final dyeDg = ref.read(settingsProvider).defaultDyeDg;
-      return _FormulaEditor(seed: FormulaSeed.fromTarget(target, dyeDg: dyeDg));
+      final settings = ref.read(settingsProvider);
+      return _FormulaEditor(
+        seed: FormulaSeed.fromTarget(
+          target,
+          dyeDg: settings.defaultDyeDg,
+          unit: settings.formulaUnit,
+        ),
+      );
     }
 
     return switch (ref.watch(formulaByIdProvider(id))) {
@@ -101,19 +112,34 @@ class _Part {
     String name = '',
     String percent = '',
     this.form = ProductForm.cream,
+    int? densityMilli,
   }) : name = TextEditingController(text: name),
-       percent = TextEditingController(text: percent);
+       percent = TextEditingController(text: percent),
+       density = TextEditingController(
+         text: densityMilli == null ? '' : densityText(densityMilli),
+       );
 
   final String id;
   final int displayRgb;
   final TextEditingController name;
   final TextEditingController percent;
+
+  /// g per mL, empty = the form's figure
+  final TextEditingController density;
   ProductForm form;
 
   void dispose() {
     name.dispose();
     percent.dispose();
+    density.dispose();
   }
+}
+
+/// what goes in a density field: null when it's empty or not a number,
+/// which saves as "the form's figure"
+int? _typedDensity(TextEditingController c) {
+  final d = parseDensityMilli(c.text);
+  return d != null && d >= minDensityMilli && d <= maxDensityMilli ? d : null;
 }
 
 class _FormulaEditor extends ConsumerStatefulWidget {
@@ -130,7 +156,15 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
   final _dye = TextEditingController();
   final _notes = TextEditingController();
   final _customRatio = TextEditingController();
+  final _devDensity = TextEditingController();
   final List<_Part> _parts = [];
+
+  MeasureUnit _unit = MeasureUnit.g;
+
+  /// the exact grams behind the dye field while it only shows a conversion
+  /// (opened, or the unit switched). typing in the field drops it
+  int? _pinnedDyeDg;
+  String? _pinnedDyeText;
 
   /// the seed this editor opened with. a new formula's seed gets a fresh id
   /// every time the route rebuilds (coming back from weighing does that), so
@@ -163,6 +197,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
     _dye.dispose();
     _notes.dispose();
     _customRatio.dispose();
+    _devDensity.dispose();
     for (final p in _parts) {
       p.dispose();
     }
@@ -171,7 +206,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
 
   void _load(FormulaSeed s) {
     _name.text = s.name;
-    _dye.text = decigramsText(s.dyeDg);
+    _unit = s.unit;
     _notes.text = s.notes;
     for (final p in _parts) {
       p.dispose();
@@ -188,6 +223,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
                 ? ''
                 : percentText(p.percentHundredths!),
             form: p.form,
+            densityMilli: p.densityMilli,
           ),
       ]);
     _devMode = s.developerMode;
@@ -200,30 +236,80 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
         : '';
     _volume = s.developerVolume;
     _devForm = s.developerForm;
+    _devDensity.text = s.developerDensityMilli == null
+        ? ''
+        : densityText(s.developerDensityMilli!);
+    // everything else has to be in place first: a volume depends on the
+    // colors' shares and densities
+    _showDye(s.dyeDg);
     _dirty = false;
   }
 
-  FormulaInputs get _inputs => FormulaInputs(
+  FormulaInputs _inputsWith({int? pinnedDyeDg}) => FormulaInputs(
     name: _name.text,
     dyeText: _dye.text,
     parts: [
       for (final p in _parts)
-        PartInput(name: p.name.text, percentText: p.percent.text),
+        PartInput(
+          name: p.name.text,
+          percentText: p.percent.text,
+          form: p.form,
+          densityText: p.density.text,
+        ),
     ],
     developerMode: _devMode,
     presetRatioHundredths: _presetRatio,
     customRatioText: _customRatio.text,
     notes: _notes.text,
+    unit: _unit,
+    developerForm: _devForm,
+    developerDensityText: _devDensity.text,
+    pinnedDyeDg: pinnedDyeDg,
   );
+
+  FormulaInputs get _inputs {
+    final pinned = _dye.text == _pinnedDyeText ? _pinnedDyeDg : null;
+    final withPin = _inputsWith(pinnedDyeDg: pinned);
+    if (pinned == null || !_unit.isVolume) return withPin;
+    // a volume moves with the densities, forms and shares. once the pinned
+    // grams don't come to what the field says any more, the field wins
+    final v = calculateFormula(withPin).dyeValue;
+    return v != null && _unit.fieldTextOf(v) == _dye.text
+        ? withPin
+        : _inputsWith();
+  }
+
+  /// [dyeDg] written into the dye field in the current unit, and pinned
+  /// so the rounding of the display doesn't change the recipe
+  void _showDye(int dyeDg) {
+    final r = calculateFormula(_inputsWith(pinnedDyeDg: dyeDg));
+    final v = r.dyeValue ?? _unit.fromMg(dyeDg * 100);
+    _dye.text = _unit.fieldTextOf(v);
+    _pinnedDyeDg = dyeDg;
+    _pinnedDyeText = _dye.text;
+  }
 
   void _changed() => setState(() => _dirty = true);
 
   // ── edits ──
 
-  void _stepDye(int deltaDg) {
-    final current = parseDecigrams(_dye.text) ?? _baseline.dyeDg;
-    final next = (current + deltaDg).clamp(0, scaleCapacityDg);
-    _dye.text = decigramsText(next);
+  /// − and + move by the unit's step: 5 g, 0.25 oz, 5 mL, 0.25 fl oz
+  void _stepDye(int direction) {
+    final current = _unit.parse(_dye.text) ?? 0;
+    final next = current + direction * _unit.step;
+    _dye.text = _unit.fieldTextOf(next < 0 ? 0 : next);
+    _changed();
+  }
+
+  /// same grams, shown in another unit. the unit sticks for new formulas
+  void _setUnit(MeasureUnit unit) {
+    if (unit == _unit) return;
+    final dyeDg = calculateFormula(_inputs).dyeDg;
+    _unit = unit;
+    // a dye amount that isn't valid stays as typed, there's nothing to
+    // convert
+    if (dyeDg != null) _showDye(dyeDg);
+    unawaited(ref.read(settingsProvider.notifier).setFormulaUnit(unit));
     _changed();
   }
 
@@ -309,6 +395,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
             requiredDg: r.weights![i],
             displayRgb: p.displayRgb,
             form: p.form,
+            densityMilli: _typedDensity(p.density),
           ),
       ],
       totalDyeDg: r.dyeDg!,
@@ -317,6 +404,8 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
           : DeveloperRatio(r.ratioHundredths!),
       developerVolume: _devMode == DeveloperMode.none ? null : _volume,
       developerForm: _devForm,
+      developerDensityMilli: _typedDensity(_devDensity),
+      unit: _unit,
       developerDg: r.developerDg!,
       totalMixtureDg: r.mixtureDg!,
       notes: _notes.text.trim().isEmpty ? null : _notes.text.trim(),
@@ -417,6 +506,8 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
       const SizedBox(height: 12),
       _DyeCard(
         controller: _dye,
+        unit: _unit,
+        onUnit: _setUnit,
         error: r.errorFor(IssueField.dye),
         onChanged: _changed,
         onStep: _stepDye,
@@ -458,6 +549,19 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
           _changed();
         },
       ),
+      // only needed to turn grams into mL, out of the way otherwise
+      if (_unit.isVolume) ...[
+        const SizedBox(height: 12),
+        _DensityCard(
+          unit: _unit,
+          parts: _parts,
+          result: r,
+          showDeveloper: _devMode != DeveloperMode.none,
+          developerForm: _devForm,
+          developerController: _devDensity,
+          onChanged: _changed,
+        ),
+      ],
       const SizedBox(height: 12),
       SectionCard(
         title: 'Notes',
@@ -496,20 +600,20 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
             ? Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1180),
+                  constraints: const BoxConstraints(maxWidth: 1240),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
                         child: ListView(
-                          padding: const EdgeInsets.fromLTRB(24, 8, 12, 32),
+                          padding: const EdgeInsets.fromLTRB(32, 16, 12, 32),
                           children: inputs,
                         ),
                       ),
                       SizedBox(
                         width: 380,
                         child: ListView(
-                          padding: const EdgeInsets.fromLTRB(12, 8, 24, 32),
+                          padding: const EdgeInsets.fromLTRB(12, 16, 32, 32),
                           children: [result, history],
                         ),
                       ),
@@ -529,7 +633,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
         bottomNavigationBar: wide
             ? null
             : _SaveBar(
-                mixtureDg: r.mixtureDg,
+                mixture: r.mixtureAmount,
                 saving: _saving,
                 onSave: () => _save(),
               ),
@@ -565,22 +669,22 @@ class _HeaderCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 60,
+                height: 60,
                 decoration: BoxDecoration(
                   color: colorFromRgb(seed.targetRgb),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: scheme.outlineVariant),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Target color',
-                      style: theme.textTheme.bodySmall?.copyWith(
+                      style: theme.textTheme.labelMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
@@ -589,7 +693,7 @@ class _HeaderCard extends StatelessWidget {
                       // two lines rather than cutting the hex off on phones
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -629,18 +733,60 @@ class _HeaderCard extends StatelessWidget {
 class _DyeCard extends StatelessWidget {
   const _DyeCard({
     required this.controller,
+    required this.unit,
+    required this.onUnit,
     required this.onChanged,
     required this.onStep,
     this.error,
   });
 
   final TextEditingController controller;
+  final MeasureUnit unit;
+  final ValueChanged<MeasureUnit> onUnit;
   final VoidCallback onChanged;
+
+  /// -1 or +1, a step of the unit
   final ValueChanged<int> onStep;
   final String? error;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    // in the field, like a color's form: what the number means
+    final unitMenu = PopupMenuButton<MeasureUnit>(
+      tooltip: 'Unit',
+      initialValue: unit,
+      onSelected: onUnit,
+      itemBuilder: (_) => [
+        for (final u in MeasureUnit.values)
+          PopupMenuItem(
+            value: u,
+            child: Text(u.isVolume ? '${u.symbol}  (by volume)' : u.symbol),
+          ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.only(left: 4, right: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              unit.symbol,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            Icon(
+              Icons.arrow_drop_down,
+              size: 20,
+              color: scheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+
     return SectionCard(
       title: 'Dye amount',
       child: Row(
@@ -648,7 +794,7 @@ class _DyeCard extends StatelessWidget {
         children: [
           IconButton.outlined(
             tooltip: 'Less dye',
-            onPressed: () => onStep(-50),
+            onPressed: () => onStep(-1),
             icon: const Icon(Icons.remove),
           ),
           const SizedBox(width: 12),
@@ -664,10 +810,13 @@ class _DyeCard extends StatelessWidget {
               ],
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontFamily: 'StudioSans',
+                fontWeight: FontWeight.w600,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
               decoration: InputDecoration(
-                suffixText: 'g',
+                suffixIcon: unitMenu,
+                suffixIconConstraints: const BoxConstraints(minHeight: 32),
                 helperText: 'All colors together, not counting developer',
                 helperMaxLines: 2,
                 errorText: error,
@@ -678,7 +827,7 @@ class _DyeCard extends StatelessWidget {
           const SizedBox(width: 12),
           IconButton.outlined(
             tooltip: 'More dye',
-            onPressed: () => onStep(50),
+            onPressed: () => onStep(1),
             icon: const Icon(Icons.add),
           ),
         ],
@@ -728,7 +877,7 @@ class _ColorsCard extends StatelessWidget {
               nameController: p.name,
               percentController: p.percent,
               onChanged: onChanged,
-              weightDg: r.weights?[i],
+              amount: r.partAmount(i),
               nameError: r.errorFor(IssueField.partName, part: i),
               percentError: r.errorFor(IssueField.partPercent, part: i),
               onRemove: parts.length > 1 ? () => onRemove(i) : null,
@@ -857,14 +1006,136 @@ class _HistoryCardState extends ConsumerState<_HistoryCard> {
   }
 }
 
+/// only with mL or fl oz: how each product's grams turn into a volume.
+/// empty fields use the form's usual figure, shown as the hint
+class _DensityCard extends StatelessWidget {
+  const _DensityCard({
+    required this.unit,
+    required this.parts,
+    required this.result,
+    required this.showDeveloper,
+    required this.developerForm,
+    required this.developerController,
+    required this.onChanged,
+  });
+
+  final MeasureUnit unit;
+  final List<_Part> parts;
+  final FormulaResult result;
+  final bool showDeveloper;
+  final ProductForm developerForm;
+  final TextEditingController developerController;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+
+    Widget row({
+      required Widget leading,
+      required String name,
+      required ProductForm form,
+      required TextEditingController controller,
+      String? error,
+    }) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(padding: const EdgeInsets.only(top: 10), child: leading),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  name.trim().isEmpty ? 'Unnamed color' : name.trim(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 132,
+              child: TextField(
+                controller: controller,
+                onChanged: (_) => onChanged(),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp('[0-9.,]')),
+                ],
+                textAlign: TextAlign.end,
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: densityText(form.densityMilli),
+                  suffix: const Padding(
+                    padding: EdgeInsets.only(left: 4),
+                    child: Text('g/mL'),
+                  ),
+                  // there's no label to float. always keeps the suffix
+                  // showing while the field is empty, the hint alone reads
+                  // as a bare number
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  errorText: error,
+                  errorMaxLines: 4,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SectionCard(
+      title: 'Density',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'The scale weighs grams, so ${unit.symbol} goes through each '
+            'product\'s weight per mL. Creams and developers are close to '
+            '1.00, a loose powder about half. The product sheet has the real '
+            'figure. Shares and the developer ratio stay by weight.',
+            style: muted,
+          ),
+          for (final (i, p) in parts.indexed)
+            row(
+              leading: ColorSwatchDot(rgb: p.displayRgb, size: 20),
+              name: p.name.text,
+              form: p.form,
+              controller: p.density,
+              error: result.errorFor(IssueField.partDensity, part: i),
+            ),
+          if (showDeveloper)
+            row(
+              leading: const ColorSwatchDot(rgb: developerRgb, size: 20),
+              name: 'Developer',
+              form: developerForm,
+              controller: developerController,
+              error: result.errorFor(IssueField.developerDensity),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SaveBar extends StatelessWidget {
   const _SaveBar({
-    required this.mixtureDg,
+    required this.mixture,
     required this.saving,
     required this.onSave,
   });
 
-  final int? mixtureDg;
+  /// already in the formula's unit
+  final String mixture;
   final bool saving;
   final VoidCallback onSave;
 
@@ -875,7 +1146,7 @@ class _SaveBar extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: scheme.surfaceContainerLowest,
         border: Border(top: BorderSide(color: scheme.outlineVariant)),
       ),
       child: SafeArea(
@@ -896,8 +1167,10 @@ class _SaveBar extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      mixtureDg == null ? '—' : formatDecigrams(mixtureDg!),
+                      mixture,
                       style: theme.textTheme.titleLarge?.copyWith(
+                        fontFamily: 'StudioSans',
+                        fontWeight: FontWeight.w600,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),

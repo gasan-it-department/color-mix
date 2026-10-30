@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import 'package:colormix_studio/shared/models/measure_unit.dart';
 import 'package:colormix_studio/shared/models/product_form.dart';
 import 'package:colormix_studio/shared/models/weighing_session.dart';
 
@@ -21,6 +22,13 @@ class Formulas extends Table {
       textEnum<ProductForm>().withDefault(Constant(ProductForm.cream.name))();
   IntColumn get developerDg => integer().withDefault(const Constant(0))();
   IntColumn get totalMixtureDg => integer()();
+
+  /// v4, g per mL × 1000 from the developer's sheet. null = the form's figure
+  IntColumn get developerDensityMilli => integer().nullable()();
+
+  /// v4, what amounts are shown in. rows from before are grams
+  TextColumn get unit =>
+      textEnum<MeasureUnit>().withDefault(Constant(MeasureUnit.g.name))();
   TextColumn get notes => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -43,6 +51,9 @@ class FormulaIngredients extends Table {
   /// v3. rows from before are cream
   TextColumn get form =>
       textEnum<ProductForm>().withDefault(Constant(ProductForm.cream.name))();
+
+  /// v4, g per mL × 1000 from the product sheet. null = the form's figure
+  IntColumn get densityMilli => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

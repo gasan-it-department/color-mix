@@ -29,21 +29,48 @@ class ScaleScreen extends ConsumerWidget {
 
     return AppPage(
       title: 'Scale',
-      body: ListView(
-        padding: pagePadding(context),
-        children: [
-          const _ConnectedScale(),
-          const SizedBox(height: 12),
-          const _FindScale(),
-          if (sim != null) ...[
-            const SizedBox(height: 12),
-            SimulatorPanel(scale: sim),
-          ],
-          if (device != null) ...[
-            const SizedBox(height: 12),
-            ScaleCheck(device: device),
-          ],
-        ],
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth >= 840;
+          final equipment = <Widget>[
+            const _ConnectedScale(),
+            if (sim != null) ...[
+              const SizedBox(height: 16),
+              SimulatorPanel(scale: sim),
+            ],
+          ];
+          final connection = <Widget>[
+            const _FindScale(),
+            if (device != null) ...[
+              const SizedBox(height: 16),
+              ScaleCheck(device: device),
+            ],
+          ];
+          return ListView(
+            padding: pagePadding(context),
+            children: [
+              if (wide)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 3, child: Column(children: equipment)),
+                    const SizedBox(width: 20),
+                    Expanded(flex: 2, child: Column(children: connection)),
+                  ],
+                )
+              else ...[
+                const _ConnectedScale(),
+                const SizedBox(height: 16),
+                ...connection.take(1),
+                if (sim != null) ...[
+                  const SizedBox(height: 16),
+                  SimulatorPanel(scale: sim),
+                ],
+                ...connection.skip(1),
+              ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -78,7 +105,29 @@ class _ConnectedScale extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              width: 56,
+              height: 56,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.sensors_outlined,
+                color: theme.colorScheme.primary,
+                size: 28,
+              ),
+            ),
             Text('No scale connected.', style: muted),
+            const SizedBox(height: 6),
+            Text(
+              'A steady reading starts with a connected scale. Practice '
+              'the full mixing flow with the simulator.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -144,13 +193,36 @@ class _ConnectedScale extends ConsumerWidget {
                 ),
               ],
               const SizedBox(height: 16),
-              Text('Live reading', style: muted),
-              Text(
-                connected && reading != null
-                    ? formatMilligrams(reading.milligrams)
-                    : '—',
-                style: theme.textTheme.displaySmall?.copyWith(
-                  fontFeatures: const [FontFeature.tabularFigures()],
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Live reading', style: muted),
+                    const SizedBox(height: 6),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        connected && reading != null
+                            ? formatMilligrams(reading.milligrams)
+                            : '—',
+                        style: theme.textTheme.displayLarge?.copyWith(
+                          fontFamily: 'StudioSans',
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: -2,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const _ReadoutTicks(),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
@@ -376,7 +448,7 @@ class _FoundTile extends ConsumerWidget {
               color: found.kind == ScaleAdapterType.esp32Custom
                   ? scheme.primaryContainer
                   : scheme.surfaceContainerHigh,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               found.isScale ? Icons.scale_outlined : Icons.bluetooth,
@@ -459,6 +531,30 @@ class _SignalBars extends StatelessWidget {
                     : scheme.outlineVariant,
                 borderRadius: BorderRadius.circular(1),
               ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A quiet instrument rule beneath the live numerical reading.
+class _ReadoutTicks extends StatelessWidget {
+  const _ReadoutTicks();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ExcludeSemantics(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          for (var i = 0; i < 31; i++)
+            Container(
+              width: 1,
+              height: i % 5 == 0 ? 12 : 5,
+              color: i % 5 == 0 ? scheme.outline : scheme.outlineVariant,
             ),
         ],
       ),

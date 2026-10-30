@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// bordered card with an optional title row
+/// A quiet paper surface with a consistent section heading.
 class SectionCard extends StatelessWidget {
   const SectionCard({
     super.key,
@@ -26,7 +26,7 @@ class SectionCard extends StatelessWidget {
           children: [
             if (title != null)
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
                   children: [
                     Expanded(

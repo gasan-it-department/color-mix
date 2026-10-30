@@ -128,6 +128,26 @@ class $FormulasTable extends Formulas
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _developerDensityMilliMeta =
+      const VerificationMeta('developerDensityMilli');
+  @override
+  late final GeneratedColumn<int> developerDensityMilli = GeneratedColumn<int>(
+    'developer_density_milli',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<MeasureUnit, String> unit =
+      GeneratedColumn<String>(
+        'unit',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: Constant(MeasureUnit.g.name),
+      ).withConverter<MeasureUnit>($FormulasTable.$converterunit);
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -172,6 +192,8 @@ class $FormulasTable extends Formulas
     developerForm,
     developerDg,
     totalMixtureDg,
+    developerDensityMilli,
+    unit,
     notes,
     createdAt,
     updatedAt,
@@ -270,6 +292,15 @@ class $FormulasTable extends Formulas
     } else if (isInserting) {
       context.missing(_totalMixtureDgMeta);
     }
+    if (data.containsKey('developer_density_milli')) {
+      context.handle(
+        _developerDensityMilliMeta,
+        developerDensityMilli.isAcceptableOrUnknown(
+          data['developer_density_milli']!,
+          _developerDensityMilliMeta,
+        ),
+      );
+    }
     if (data.containsKey('notes')) {
       context.handle(
         _notesMeta,
@@ -347,6 +378,16 @@ class $FormulasTable extends Formulas
         DriftSqlType.int,
         data['${effectivePrefix}total_mixture_dg'],
       )!,
+      developerDensityMilli: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}developer_density_milli'],
+      ),
+      unit: $FormulasTable.$converterunit.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}unit'],
+        )!,
+      ),
       notes: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
@@ -371,6 +412,8 @@ class $FormulasTable extends Formulas
   $converterdeveloperForm = const EnumNameConverter<ProductForm>(
     ProductForm.values,
   );
+  static JsonTypeConverter2<MeasureUnit, String, String> $converterunit =
+      const EnumNameConverter<MeasureUnit>(MeasureUnit.values);
 }
 
 class FormulaRow extends DataClass implements Insertable<FormulaRow> {
@@ -387,6 +430,12 @@ class FormulaRow extends DataClass implements Insertable<FormulaRow> {
   final ProductForm developerForm;
   final int developerDg;
   final int totalMixtureDg;
+
+  /// v4, g per mL × 1000 from the developer's sheet. null = the form's figure
+  final int? developerDensityMilli;
+
+  /// v4, what amounts are shown in. rows from before are grams
+  final MeasureUnit unit;
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -402,6 +451,8 @@ class FormulaRow extends DataClass implements Insertable<FormulaRow> {
     required this.developerForm,
     required this.developerDg,
     required this.totalMixtureDg,
+    this.developerDensityMilli,
+    required this.unit,
     this.notes,
     required this.createdAt,
     required this.updatedAt,
@@ -432,6 +483,12 @@ class FormulaRow extends DataClass implements Insertable<FormulaRow> {
     }
     map['developer_dg'] = Variable<int>(developerDg);
     map['total_mixture_dg'] = Variable<int>(totalMixtureDg);
+    if (!nullToAbsent || developerDensityMilli != null) {
+      map['developer_density_milli'] = Variable<int>(developerDensityMilli);
+    }
+    {
+      map['unit'] = Variable<String>($FormulasTable.$converterunit.toSql(unit));
+    }
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
@@ -459,6 +516,10 @@ class FormulaRow extends DataClass implements Insertable<FormulaRow> {
       developerForm: Value(developerForm),
       developerDg: Value(developerDg),
       totalMixtureDg: Value(totalMixtureDg),
+      developerDensityMilli: developerDensityMilli == null && nullToAbsent
+          ? const Value.absent()
+          : Value(developerDensityMilli),
+      unit: Value(unit),
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
@@ -488,6 +549,12 @@ class FormulaRow extends DataClass implements Insertable<FormulaRow> {
       ),
       developerDg: serializer.fromJson<int>(json['developerDg']),
       totalMixtureDg: serializer.fromJson<int>(json['totalMixtureDg']),
+      developerDensityMilli: serializer.fromJson<int?>(
+        json['developerDensityMilli'],
+      ),
+      unit: $FormulasTable.$converterunit.fromJson(
+        serializer.fromJson<String>(json['unit']),
+      ),
       notes: serializer.fromJson<String?>(json['notes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -512,6 +579,10 @@ class FormulaRow extends DataClass implements Insertable<FormulaRow> {
       ),
       'developerDg': serializer.toJson<int>(developerDg),
       'totalMixtureDg': serializer.toJson<int>(totalMixtureDg),
+      'developerDensityMilli': serializer.toJson<int?>(developerDensityMilli),
+      'unit': serializer.toJson<String>(
+        $FormulasTable.$converterunit.toJson(unit),
+      ),
       'notes': serializer.toJson<String?>(notes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -530,6 +601,8 @@ class FormulaRow extends DataClass implements Insertable<FormulaRow> {
     ProductForm? developerForm,
     int? developerDg,
     int? totalMixtureDg,
+    Value<int?> developerDensityMilli = const Value.absent(),
+    MeasureUnit? unit,
     Value<String?> notes = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -549,6 +622,10 @@ class FormulaRow extends DataClass implements Insertable<FormulaRow> {
     developerForm: developerForm ?? this.developerForm,
     developerDg: developerDg ?? this.developerDg,
     totalMixtureDg: totalMixtureDg ?? this.totalMixtureDg,
+    developerDensityMilli: developerDensityMilli.present
+        ? developerDensityMilli.value
+        : this.developerDensityMilli,
+    unit: unit ?? this.unit,
     notes: notes.present ? notes.value : this.notes,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -578,6 +655,10 @@ class FormulaRow extends DataClass implements Insertable<FormulaRow> {
       totalMixtureDg: data.totalMixtureDg.present
           ? data.totalMixtureDg.value
           : this.totalMixtureDg,
+      developerDensityMilli: data.developerDensityMilli.present
+          ? data.developerDensityMilli.value
+          : this.developerDensityMilli,
+      unit: data.unit.present ? data.unit.value : this.unit,
       notes: data.notes.present ? data.notes.value : this.notes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -598,6 +679,8 @@ class FormulaRow extends DataClass implements Insertable<FormulaRow> {
           ..write('developerForm: $developerForm, ')
           ..write('developerDg: $developerDg, ')
           ..write('totalMixtureDg: $totalMixtureDg, ')
+          ..write('developerDensityMilli: $developerDensityMilli, ')
+          ..write('unit: $unit, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -618,6 +701,8 @@ class FormulaRow extends DataClass implements Insertable<FormulaRow> {
     developerForm,
     developerDg,
     totalMixtureDg,
+    developerDensityMilli,
+    unit,
     notes,
     createdAt,
     updatedAt,
@@ -637,6 +722,8 @@ class FormulaRow extends DataClass implements Insertable<FormulaRow> {
           other.developerForm == this.developerForm &&
           other.developerDg == this.developerDg &&
           other.totalMixtureDg == this.totalMixtureDg &&
+          other.developerDensityMilli == this.developerDensityMilli &&
+          other.unit == this.unit &&
           other.notes == this.notes &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -654,6 +741,8 @@ class FormulasCompanion extends UpdateCompanion<FormulaRow> {
   final Value<ProductForm> developerForm;
   final Value<int> developerDg;
   final Value<int> totalMixtureDg;
+  final Value<int?> developerDensityMilli;
+  final Value<MeasureUnit> unit;
   final Value<String?> notes;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -670,6 +759,8 @@ class FormulasCompanion extends UpdateCompanion<FormulaRow> {
     this.developerForm = const Value.absent(),
     this.developerDg = const Value.absent(),
     this.totalMixtureDg = const Value.absent(),
+    this.developerDensityMilli = const Value.absent(),
+    this.unit = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -687,6 +778,8 @@ class FormulasCompanion extends UpdateCompanion<FormulaRow> {
     this.developerForm = const Value.absent(),
     this.developerDg = const Value.absent(),
     required int totalMixtureDg,
+    this.developerDensityMilli = const Value.absent(),
+    this.unit = const Value.absent(),
     this.notes = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -710,6 +803,8 @@ class FormulasCompanion extends UpdateCompanion<FormulaRow> {
     Expression<String>? developerForm,
     Expression<int>? developerDg,
     Expression<int>? totalMixtureDg,
+    Expression<int>? developerDensityMilli,
+    Expression<String>? unit,
     Expression<String>? notes,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -728,6 +823,9 @@ class FormulasCompanion extends UpdateCompanion<FormulaRow> {
       if (developerForm != null) 'developer_form': developerForm,
       if (developerDg != null) 'developer_dg': developerDg,
       if (totalMixtureDg != null) 'total_mixture_dg': totalMixtureDg,
+      if (developerDensityMilli != null)
+        'developer_density_milli': developerDensityMilli,
+      if (unit != null) 'unit': unit,
       if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -747,6 +845,8 @@ class FormulasCompanion extends UpdateCompanion<FormulaRow> {
     Value<ProductForm>? developerForm,
     Value<int>? developerDg,
     Value<int>? totalMixtureDg,
+    Value<int?>? developerDensityMilli,
+    Value<MeasureUnit>? unit,
     Value<String?>? notes,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -765,6 +865,9 @@ class FormulasCompanion extends UpdateCompanion<FormulaRow> {
       developerForm: developerForm ?? this.developerForm,
       developerDg: developerDg ?? this.developerDg,
       totalMixtureDg: totalMixtureDg ?? this.totalMixtureDg,
+      developerDensityMilli:
+          developerDensityMilli ?? this.developerDensityMilli,
+      unit: unit ?? this.unit,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -812,6 +915,16 @@ class FormulasCompanion extends UpdateCompanion<FormulaRow> {
     if (totalMixtureDg.present) {
       map['total_mixture_dg'] = Variable<int>(totalMixtureDg.value);
     }
+    if (developerDensityMilli.present) {
+      map['developer_density_milli'] = Variable<int>(
+        developerDensityMilli.value,
+      );
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(
+        $FormulasTable.$converterunit.toSql(unit.value),
+      );
+    }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
@@ -841,6 +954,8 @@ class FormulasCompanion extends UpdateCompanion<FormulaRow> {
           ..write('developerForm: $developerForm, ')
           ..write('developerDg: $developerDg, ')
           ..write('totalMixtureDg: $totalMixtureDg, ')
+          ..write('developerDensityMilli: $developerDensityMilli, ')
+          ..write('unit: $unit, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -942,6 +1057,17 @@ class $FormulaIngredientsTable extends FormulaIngredients
         requiredDuringInsert: false,
         defaultValue: Constant(ProductForm.cream.name),
       ).withConverter<ProductForm>($FormulaIngredientsTable.$converterform);
+  static const VerificationMeta _densityMilliMeta = const VerificationMeta(
+    'densityMilli',
+  );
+  @override
+  late final GeneratedColumn<int> densityMilli = GeneratedColumn<int>(
+    'density_milli',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -952,6 +1078,7 @@ class $FormulaIngredientsTable extends FormulaIngredients
     requiredDg,
     displayRgb,
     form,
+    densityMilli,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1021,6 +1148,15 @@ class $FormulaIngredientsTable extends FormulaIngredients
     } else if (isInserting) {
       context.missing(_displayRgbMeta);
     }
+    if (data.containsKey('density_milli')) {
+      context.handle(
+        _densityMilliMeta,
+        densityMilli.isAcceptableOrUnknown(
+          data['density_milli']!,
+          _densityMilliMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1064,6 +1200,10 @@ class $FormulaIngredientsTable extends FormulaIngredients
           data['${effectivePrefix}form'],
         )!,
       ),
+      densityMilli: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}density_milli'],
+      ),
     );
   }
 
@@ -1088,6 +1228,9 @@ class FormulaIngredientRow extends DataClass
 
   /// v3. rows from before are cream
   final ProductForm form;
+
+  /// v4, g per mL × 1000 from the product sheet. null = the form's figure
+  final int? densityMilli;
   const FormulaIngredientRow({
     required this.id,
     required this.formulaId,
@@ -1097,6 +1240,7 @@ class FormulaIngredientRow extends DataClass
     required this.requiredDg,
     required this.displayRgb,
     required this.form,
+    this.densityMilli,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1113,6 +1257,9 @@ class FormulaIngredientRow extends DataClass
         $FormulaIngredientsTable.$converterform.toSql(form),
       );
     }
+    if (!nullToAbsent || densityMilli != null) {
+      map['density_milli'] = Variable<int>(densityMilli);
+    }
     return map;
   }
 
@@ -1126,6 +1273,9 @@ class FormulaIngredientRow extends DataClass
       requiredDg: Value(requiredDg),
       displayRgb: Value(displayRgb),
       form: Value(form),
+      densityMilli: densityMilli == null && nullToAbsent
+          ? const Value.absent()
+          : Value(densityMilli),
     );
   }
 
@@ -1145,6 +1295,7 @@ class FormulaIngredientRow extends DataClass
       form: $FormulaIngredientsTable.$converterform.fromJson(
         serializer.fromJson<String>(json['form']),
       ),
+      densityMilli: serializer.fromJson<int?>(json['densityMilli']),
     );
   }
   @override
@@ -1161,6 +1312,7 @@ class FormulaIngredientRow extends DataClass
       'form': serializer.toJson<String>(
         $FormulaIngredientsTable.$converterform.toJson(form),
       ),
+      'densityMilli': serializer.toJson<int?>(densityMilli),
     };
   }
 
@@ -1173,6 +1325,7 @@ class FormulaIngredientRow extends DataClass
     int? requiredDg,
     int? displayRgb,
     ProductForm? form,
+    Value<int?> densityMilli = const Value.absent(),
   }) => FormulaIngredientRow(
     id: id ?? this.id,
     formulaId: formulaId ?? this.formulaId,
@@ -1182,6 +1335,7 @@ class FormulaIngredientRow extends DataClass
     requiredDg: requiredDg ?? this.requiredDg,
     displayRgb: displayRgb ?? this.displayRgb,
     form: form ?? this.form,
+    densityMilli: densityMilli.present ? densityMilli.value : this.densityMilli,
   );
   FormulaIngredientRow copyWithCompanion(FormulaIngredientsCompanion data) {
     return FormulaIngredientRow(
@@ -1199,6 +1353,9 @@ class FormulaIngredientRow extends DataClass
           ? data.displayRgb.value
           : this.displayRgb,
       form: data.form.present ? data.form.value : this.form,
+      densityMilli: data.densityMilli.present
+          ? data.densityMilli.value
+          : this.densityMilli,
     );
   }
 
@@ -1212,7 +1369,8 @@ class FormulaIngredientRow extends DataClass
           ..write('percentHundredths: $percentHundredths, ')
           ..write('requiredDg: $requiredDg, ')
           ..write('displayRgb: $displayRgb, ')
-          ..write('form: $form')
+          ..write('form: $form, ')
+          ..write('densityMilli: $densityMilli')
           ..write(')'))
         .toString();
   }
@@ -1227,6 +1385,7 @@ class FormulaIngredientRow extends DataClass
     requiredDg,
     displayRgb,
     form,
+    densityMilli,
   );
   @override
   bool operator ==(Object other) =>
@@ -1239,7 +1398,8 @@ class FormulaIngredientRow extends DataClass
           other.percentHundredths == this.percentHundredths &&
           other.requiredDg == this.requiredDg &&
           other.displayRgb == this.displayRgb &&
-          other.form == this.form);
+          other.form == this.form &&
+          other.densityMilli == this.densityMilli);
 }
 
 class FormulaIngredientsCompanion
@@ -1252,6 +1412,7 @@ class FormulaIngredientsCompanion
   final Value<int> requiredDg;
   final Value<int> displayRgb;
   final Value<ProductForm> form;
+  final Value<int?> densityMilli;
   final Value<int> rowid;
   const FormulaIngredientsCompanion({
     this.id = const Value.absent(),
@@ -1262,6 +1423,7 @@ class FormulaIngredientsCompanion
     this.requiredDg = const Value.absent(),
     this.displayRgb = const Value.absent(),
     this.form = const Value.absent(),
+    this.densityMilli = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   FormulaIngredientsCompanion.insert({
@@ -1273,6 +1435,7 @@ class FormulaIngredientsCompanion
     required int requiredDg,
     required int displayRgb,
     this.form = const Value.absent(),
+    this.densityMilli = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        formulaId = Value(formulaId),
@@ -1290,6 +1453,7 @@ class FormulaIngredientsCompanion
     Expression<int>? requiredDg,
     Expression<int>? displayRgb,
     Expression<String>? form,
+    Expression<int>? densityMilli,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1301,6 +1465,7 @@ class FormulaIngredientsCompanion
       if (requiredDg != null) 'required_dg': requiredDg,
       if (displayRgb != null) 'display_rgb': displayRgb,
       if (form != null) 'form': form,
+      if (densityMilli != null) 'density_milli': densityMilli,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1314,6 +1479,7 @@ class FormulaIngredientsCompanion
     Value<int>? requiredDg,
     Value<int>? displayRgb,
     Value<ProductForm>? form,
+    Value<int?>? densityMilli,
     Value<int>? rowid,
   }) {
     return FormulaIngredientsCompanion(
@@ -1325,6 +1491,7 @@ class FormulaIngredientsCompanion
       requiredDg: requiredDg ?? this.requiredDg,
       displayRgb: displayRgb ?? this.displayRgb,
       form: form ?? this.form,
+      densityMilli: densityMilli ?? this.densityMilli,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1358,6 +1525,9 @@ class FormulaIngredientsCompanion
         $FormulaIngredientsTable.$converterform.toSql(form.value),
       );
     }
+    if (densityMilli.present) {
+      map['density_milli'] = Variable<int>(densityMilli.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1375,6 +1545,7 @@ class FormulaIngredientsCompanion
           ..write('requiredDg: $requiredDg, ')
           ..write('displayRgb: $displayRgb, ')
           ..write('form: $form, ')
+          ..write('densityMilli: $densityMilli, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3215,6 +3386,8 @@ typedef $$FormulasTableCreateCompanionBuilder = FormulasCompanion Function({
   Value<ProductForm> developerForm,
   Value<int> developerDg,
   required int totalMixtureDg,
+  Value<int?> developerDensityMilli,
+  Value<MeasureUnit> unit,
   Value<String?> notes,
   required DateTime createdAt,
   required DateTime updatedAt,
@@ -3232,6 +3405,8 @@ typedef $$FormulasTableUpdateCompanionBuilder = FormulasCompanion Function({
   Value<ProductForm> developerForm,
   Value<int> developerDg,
   Value<int> totalMixtureDg,
+  Value<int?> developerDensityMilli,
+  Value<MeasureUnit> unit,
   Value<String?> notes,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -3351,6 +3526,17 @@ class $$FormulasTableFilterComposer
     column: $table.totalMixtureDg,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<int> get developerDensityMilli => $composableBuilder(
+    column: $table.developerDensityMilli,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<MeasureUnit, MeasureUnit, String> get unit =>
+      $composableBuilder(
+        column: $table.unit,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
@@ -3482,6 +3668,16 @@ class $$FormulasTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get developerDensityMilli => $composableBuilder(
+    column: $table.developerDensityMilli,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get notes => $composableBuilder(
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
@@ -3552,6 +3748,14 @@ class $$FormulasTableAnnotationComposer
     column: $table.totalMixtureDg,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get developerDensityMilli => $composableBuilder(
+    column: $table.developerDensityMilli,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<MeasureUnit, String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
@@ -3656,6 +3860,8 @@ class $$FormulasTableTableManager
                 Value<ProductForm> developerForm = const Value.absent(),
                 Value<int> developerDg = const Value.absent(),
                 Value<int> totalMixtureDg = const Value.absent(),
+                Value<int?> developerDensityMilli = const Value.absent(),
+                Value<MeasureUnit> unit = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -3672,6 +3878,8 @@ class $$FormulasTableTableManager
                 developerForm: developerForm,
                 developerDg: developerDg,
                 totalMixtureDg: totalMixtureDg,
+                developerDensityMilli: developerDensityMilli,
+                unit: unit,
                 notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -3690,6 +3898,8 @@ class $$FormulasTableTableManager
                 Value<ProductForm> developerForm = const Value.absent(),
                 Value<int> developerDg = const Value.absent(),
                 required int totalMixtureDg,
+                Value<int?> developerDensityMilli = const Value.absent(),
+                Value<MeasureUnit> unit = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -3706,6 +3916,8 @@ class $$FormulasTableTableManager
                 developerForm: developerForm,
                 developerDg: developerDg,
                 totalMixtureDg: totalMixtureDg,
+                developerDensityMilli: developerDensityMilli,
+                unit: unit,
                 notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -3805,6 +4017,7 @@ typedef $$FormulaIngredientsTableCreateCompanionBuilder =
       required int requiredDg,
       required int displayRgb,
       Value<ProductForm> form,
+      Value<int?> densityMilli,
       Value<int> rowid,
     });
 typedef $$FormulaIngredientsTableUpdateCompanionBuilder =
@@ -3817,6 +4030,7 @@ typedef $$FormulaIngredientsTableUpdateCompanionBuilder =
       Value<int> requiredDg,
       Value<int> displayRgb,
       Value<ProductForm> form,
+      Value<int?> densityMilli,
       Value<int> rowid,
     });
 
@@ -3896,6 +4110,11 @@ class $$FormulaIngredientsTableFilterComposer
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
+  ColumnFilters<int> get densityMilli => $composableBuilder(
+    column: $table.densityMilli,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$FormulasTableFilterComposer get formulaId {
     final $$FormulasTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -3964,6 +4183,11 @@ class $$FormulaIngredientsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get densityMilli => $composableBuilder(
+    column: $table.densityMilli,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$FormulasTableOrderingComposer get formulaId {
     final $$FormulasTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4023,6 +4247,11 @@ class $$FormulaIngredientsTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<ProductForm, String> get form =>
       $composableBuilder(column: $table.form, builder: (column) => column);
+
+  GeneratedColumn<int> get densityMilli => $composableBuilder(
+    column: $table.densityMilli,
+    builder: (column) => column,
+  );
 
   $$FormulasTableAnnotationComposer get formulaId {
     final $$FormulasTableAnnotationComposer composer = $composerBuilder(
@@ -4089,6 +4318,7 @@ class $$FormulaIngredientsTableTableManager
                 Value<int> requiredDg = const Value.absent(),
                 Value<int> displayRgb = const Value.absent(),
                 Value<ProductForm> form = const Value.absent(),
+                Value<int?> densityMilli = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FormulaIngredientsCompanion(
                 id: id,
@@ -4099,6 +4329,7 @@ class $$FormulaIngredientsTableTableManager
                 requiredDg: requiredDg,
                 displayRgb: displayRgb,
                 form: form,
+                densityMilli: densityMilli,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4111,6 +4342,7 @@ class $$FormulaIngredientsTableTableManager
                 required int requiredDg,
                 required int displayRgb,
                 Value<ProductForm> form = const Value.absent(),
+                Value<int?> densityMilli = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FormulaIngredientsCompanion.insert(
                 id: id,
@@ -4121,6 +4353,7 @@ class $$FormulaIngredientsTableTableManager
                 requiredDg: requiredDg,
                 displayRgb: displayRgb,
                 form: form,
+                densityMilli: densityMilli,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

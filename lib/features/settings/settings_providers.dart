@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:colormix_studio/core/database/database_provider.dart';
 import 'package:colormix_studio/features/settings/app_settings.dart';
 import 'package:colormix_studio/features/settings/settings_repository.dart';
+import 'package:colormix_studio/shared/models/measure_unit.dart';
 
 /// loaded in main() before runApp
 final initialSettingsProvider = Provider<AppSettings>(
@@ -36,6 +37,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> setDefaultDyeDg(int dg) =>
       _update(state.copyWith(defaultDyeDg: dg));
+
+  Future<void> setFormulaUnit(MeasureUnit unit) =>
+      _update(state.copyWith(formulaUnit: unit));
 
   Future<void> setStability({int? thresholdMg, int? dwellMs}) => _update(
     state.copyWith(

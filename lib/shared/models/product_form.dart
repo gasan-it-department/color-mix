@@ -10,6 +10,7 @@ enum ProductForm {
   /// or a tenth of the step, before the target: what weighing always used
   cream(
     label: 'Cream',
+    densityMilli: 1000,
     approachMinMg: 1000,
     approachPercent: 10,
     pourHint: 'Squeeze it in steadily.',
@@ -19,6 +20,7 @@ enum ProductForm {
   /// runs fast and keeps dripping after you stop, so slow down sooner
   liquid(
     label: 'Liquid',
+    densityMilli: 1000,
     approachMinMg: 2000,
     approachPercent: 15,
     pourHint: 'Pour slowly, it runs fast.',
@@ -29,6 +31,7 @@ enum ProductForm {
   /// down a little sooner than a cream. settles straight away
   powder(
     label: 'Powder',
+    densityMilli: 500,
     approachMinMg: 1500,
     approachPercent: 10,
     pourHint: 'Spoon it in.',
@@ -37,6 +40,7 @@ enum ProductForm {
 
   const ProductForm({
     required this.label,
+    required this.densityMilli,
     required this.approachMinMg,
     required this.approachPercent,
     required this.pourHint,
@@ -44,6 +48,11 @@ enum ProductForm {
   });
 
   final String label;
+
+  /// g per mL × 1000, for showing amounts in mL when the product sheet's
+  /// own figure isn't entered. creams and developers sit close to water, a
+  /// loose powder about half of it. guesses, the product sheet wins
+  final int densityMilli;
 
   /// the slow-down band before the target is the bigger of these two
   final int approachMinMg;

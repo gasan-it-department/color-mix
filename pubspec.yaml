@@ -34,3 +34,13 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/fonts/DM-Sans-OFL.txt
+    - assets/fonts/Fraunces-OFL.txt
+  fonts:
+    - family: StudioSans
+      fonts:
+        - asset: assets/fonts/StudioSans.ttf
+    - family: StudioSerif
+      fonts:
+        - asset: assets/fonts/StudioSerif.ttf

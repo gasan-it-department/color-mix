@@ -132,7 +132,7 @@ class _HoldToPour extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: active ? scheme.primaryContainer : scheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: active ? scheme.primary : scheme.outlineVariant,
             ),

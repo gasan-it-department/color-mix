@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:colormix_studio/core/database/app_database.dart';
 import 'package:colormix_studio/features/settings/app_settings.dart';
+import 'package:colormix_studio/shared/models/measure_unit.dart';
 
 /// settings are plain key/value rows, unknown or broken values fall back to
 /// the defaults
@@ -17,6 +18,7 @@ class SettingsRepository {
   static const _defaultDyeDg = 'default_dye_dg';
   static const _stabilityThresholdMg = 'stability_threshold_mg';
   static const _stabilityDwellMs = 'stability_dwell_ms';
+  static const _formulaUnit = 'formula_unit';
   static const _lastScaleId = 'last_scale_id';
   static const _lastScaleName = 'last_scale_name';
 
@@ -36,6 +38,8 @@ class SettingsRepository {
           d.stabilityThresholdMg,
       stabilityDwellMs:
           int.tryParse(map[_stabilityDwellMs] ?? '') ?? d.stabilityDwellMs,
+      formulaUnit:
+          MeasureUnit.values.asNameMap()[map[_formulaUnit]] ?? d.formulaUnit,
       lastScaleId: _nonEmpty(map[_lastScaleId]),
       lastScaleName: _nonEmpty(map[_lastScaleName]),
     );
@@ -50,6 +54,7 @@ class SettingsRepository {
       _defaultDyeDg: '${s.defaultDyeDg}',
       _stabilityThresholdMg: '${s.stabilityThresholdMg}',
       _stabilityDwellMs: '${s.stabilityDwellMs}',
+      _formulaUnit: s.formulaUnit.name,
       // empty string = none, rows are never deleted
       _lastScaleId: s.lastScaleId ?? '',
       _lastScaleName: s.lastScaleName ?? '',

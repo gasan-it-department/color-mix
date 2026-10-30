@@ -22,6 +22,7 @@ class SeedPart {
     required this.displayRgb,
     this.percentHundredths,
     this.form = ProductForm.cream,
+    this.densityMilli,
   });
 
   final String id;
@@ -31,6 +32,9 @@ class SeedPart {
   /// null leaves the field empty
   final int? percentHundredths;
   final ProductForm form;
+
+  /// null = the form's figure, the field stays empty
+  final int? densityMilli;
 }
 
 /// what the editor starts from: a new formula for the picked color (from its
@@ -50,6 +54,8 @@ class FormulaSeed {
     this.ratioHundredths,
     this.developerVolume,
     this.developerForm = ProductForm.cream,
+    this.developerDensityMilli,
+    this.unit = MeasureUnit.g,
     this.notes = '',
     this.createdAt,
   });
@@ -67,10 +73,17 @@ class FormulaSeed {
   final int? ratioHundredths;
   final int? developerVolume;
   final ProductForm developerForm;
+  final int? developerDensityMilli;
+  final MeasureUnit unit;
   final String notes;
   final DateTime? createdAt;
 
-  factory FormulaSeed.fromTarget(ColorTarget target, {required int dyeDg}) {
+  /// [unit] is the one picked last, a new formula starts in it
+  factory FormulaSeed.fromTarget(
+    ColorTarget target, {
+    required int dyeDg,
+    MeasureUnit unit = MeasureUnit.g,
+  }) {
     final recipe = target.demoRecipe;
     final label = '${target.name} · ${hexFromRgb(target.rgb)}';
 
@@ -94,6 +107,7 @@ class FormulaSeed {
           ),
         ],
         developerMode: DeveloperMode.unset,
+        unit: unit,
       );
     }
 
@@ -118,6 +132,7 @@ class FormulaSeed {
       ],
       developerMode: _modeFor(ratio),
       ratioHundredths: ratio,
+      unit: unit,
     );
   }
 
@@ -143,12 +158,15 @@ class FormulaSeed {
             displayRgb: i.displayRgb,
             percentHundredths: i.percentHundredths,
             form: i.form,
+            densityMilli: i.densityMilli,
           ),
       ],
       developerMode: _modeFor(ratio),
       ratioHundredths: ratio,
       developerVolume: f.developerVolume,
       developerForm: f.developerForm,
+      developerDensityMilli: f.developerDensityMilli,
+      unit: f.unit,
       notes: f.notes ?? '',
       createdAt: f.createdAt,
     );

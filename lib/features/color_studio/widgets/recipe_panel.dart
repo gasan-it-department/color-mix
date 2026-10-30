@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
+import 'package:colormix_studio/core/utils/color_utils.dart';
 import 'package:colormix_studio/core/widgets/section_card.dart';
 import 'package:colormix_studio/features/color_studio/color_target.dart';
 import 'package:colormix_studio/shared/data/demo_catalog.dart';
@@ -84,9 +85,28 @@ class _RecipeBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        ExcludeSemantics(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: SizedBox(
+              height: 8,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final p in recipe.parts)
+                    Expanded(
+                      flex: p.percentHundredths,
+                      child: ColoredBox(color: colorFromRgb(p.displayRgb)),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
         for (final p in recipe.parts)
           _Line(
-            leading: ColorSwatchDot(rgb: p.displayRgb, size: 22),
+            leading: ColorSwatchDot(rgb: p.displayRgb, size: 26),
             label: p.name,
             value: formatPercentHundredths(p.percentHundredths),
           ),
@@ -131,14 +151,18 @@ class _Line extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
-          SizedBox(width: 22, child: Center(child: leading)),
+          SizedBox(width: 26, child: Center(child: leading)),
           const SizedBox(width: 12),
           Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
-          Text(
-            value,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              fontFeatures: const [FontFeature.tabularFigures()],
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
         ],

@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 
-// interface colours only, never dye colours.
-// no shadows or elevation anywhere: hierarchy comes from 1px borders and
-// background tone steps.
+// Interface colours only, never dye colours. Warm paper, olive ink and
+// restrained surface steps keep the actual pigment swatches prominent.
 
 abstract final class _Light {
-  static const canvas = Color(0xFFFAF8F5); // warm off-white
-  static const card = Color(0xFFFFFFFF);
-  static const sunken = Color(0xFFF3EEE8); // warm beige step
-  static const beige = Color(0xFFEDE4D9);
-  static const line = Color(0xFFE6DFD7);
-  static const lineStrong = Color(0xFFCFC6BC);
-  static const ink = Color(0xFF2B2A29); // deep charcoal
-  static const ink2 = Color(0xFF6B6560);
-  static const rose = Color(0xFF9A5560); // muted rose, dark enough for text
-  static const roseWash = Color(0xFFF5E6E8);
-  static const onRoseWash = Color(0xFF6E3540);
+  static const canvas = Color(0xFFF5F4EE);
+  static const card = Color(0xFFFFFEFA);
+  static const sunken = Color(0xFFEEEDE5);
+  static const beige = Color(0xFFE4E5DA);
+  static const line = Color(0xFFDDDFD3);
+  static const lineStrong = Color(0xFFACB1A2);
+  static const ink = Color(0xFF252D26);
+  static const ink2 = Color(0xFF646B60);
+  static const accent = Color(0xFF435B46);
+  static const accentWash = Color(0xFFE3EADB);
+  static const onAccentWash = Color(0xFF304133);
   static const green = Color(0xFF2F7350);
   static const greenWash = Color(0xFFE2F0E7);
   static const amber = Color(0xFF8F5409);
@@ -25,17 +24,17 @@ abstract final class _Light {
 }
 
 abstract final class _Dark {
-  static const canvas = Color(0xFF1C1B1A);
-  static const card = Color(0xFF242220);
-  static const sunken = Color(0xFF2C2927);
-  static const beige = Color(0xFF3A3430);
-  static const line = Color(0xFF37332F);
-  static const lineStrong = Color(0xFF4D4742);
-  static const ink = Color(0xFFEDE8E3);
-  static const ink2 = Color(0xFFA9A19A);
-  static const rose = Color(0xFFE2A6AF);
-  static const roseWash = Color(0xFF3B2A2E);
-  static const onRoseWash = Color(0xFFF3D3D8);
+  static const canvas = Color(0xFF191E1A);
+  static const card = Color(0xFF222923);
+  static const sunken = Color(0xFF2B332C);
+  static const beige = Color(0xFF364037);
+  static const line = Color(0xFF39433A);
+  static const lineStrong = Color(0xFF74816F);
+  static const ink = Color(0xFFF0F1E8);
+  static const ink2 = Color(0xFFB5BDB0);
+  static const accent = Color(0xFFB8CDA5);
+  static const accentWash = Color(0xFF344631);
+  static const onAccentWash = Color(0xFFD9E8CC);
   static const green = Color(0xFF86C9A2);
   static const greenWash = Color(0xFF1F3329);
   static const amber = Color(0xFFE5B567);
@@ -123,10 +122,10 @@ abstract final class AppTheme {
   static ThemeData light() => _build(
     const ColorScheme(
       brightness: Brightness.light,
-      primary: _Light.rose,
+      primary: _Light.accent,
       onPrimary: Colors.white,
-      primaryContainer: _Light.roseWash,
-      onPrimaryContainer: _Light.onRoseWash,
+      primaryContainer: _Light.accentWash,
+      onPrimaryContainer: _Light.onAccentWash,
       secondary: _Light.ink,
       onSecondary: Colors.white,
       secondaryContainer: _Light.beige,
@@ -149,7 +148,7 @@ abstract final class AppTheme {
       outlineVariant: _Light.line,
       inverseSurface: _Light.ink,
       onInverseSurface: _Light.canvas,
-      inversePrimary: _Dark.rose,
+      inversePrimary: _Dark.accent,
       surfaceTint: Colors.transparent,
       shadow: Colors.transparent,
       scrim: Color(0x66000000),
@@ -160,10 +159,10 @@ abstract final class AppTheme {
   static ThemeData dark() => _build(
     const ColorScheme(
       brightness: Brightness.dark,
-      primary: _Dark.rose,
-      onPrimary: Color(0xFF3A1E23),
-      primaryContainer: _Dark.roseWash,
-      onPrimaryContainer: _Dark.onRoseWash,
+      primary: _Dark.accent,
+      onPrimary: Color(0xFF20301F),
+      primaryContainer: _Dark.accentWash,
+      onPrimaryContainer: _Dark.onAccentWash,
       secondary: _Dark.ink,
       onSecondary: _Dark.canvas,
       secondaryContainer: _Dark.beige,
@@ -186,7 +185,7 @@ abstract final class AppTheme {
       outlineVariant: _Dark.line,
       inverseSurface: _Dark.ink,
       onInverseSurface: _Dark.canvas,
-      inversePrimary: _Light.rose,
+      inversePrimary: _Light.accent,
       surfaceTint: Colors.transparent,
       shadow: Colors.transparent,
       scrim: Color(0x99000000),
@@ -195,23 +194,72 @@ abstract final class AppTheme {
   );
 
   static ThemeData _build(ColorScheme scheme, StatusColors status) {
-    final base = ThemeData(colorScheme: scheme, brightness: scheme.brightness);
+    final base = ThemeData(
+      colorScheme: scheme,
+      brightness: scheme.brightness,
+      fontFamily: 'StudioSans',
+      useMaterial3: true,
+    );
     final text = base.textTheme.apply(
       bodyColor: scheme.onSurface,
       displayColor: scheme.onSurface,
     );
     final textTheme = text.copyWith(
-      titleLarge: text.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-      titleMedium: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-      titleSmall: text.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+      displayLarge: text.displayLarge?.copyWith(
+        fontFamily: 'StudioSerif',
+        letterSpacing: -2,
+        height: 1.08,
+      ),
+      displayMedium: text.displayMedium?.copyWith(
+        fontFamily: 'StudioSerif',
+        letterSpacing: -1.5,
+        height: 1.1,
+      ),
+      displaySmall: text.displaySmall?.copyWith(
+        fontFamily: 'StudioSerif',
+        letterSpacing: -1,
+        height: 1.12,
+      ),
+      headlineLarge: text.headlineLarge?.copyWith(
+        fontFamily: 'StudioSerif',
+        letterSpacing: -0.8,
+        height: 1.15,
+      ),
+      headlineMedium: text.headlineMedium?.copyWith(
+        fontFamily: 'StudioSerif',
+        letterSpacing: -0.6,
+        height: 1.18,
+      ),
+      headlineSmall: text.headlineSmall?.copyWith(
+        fontFamily: 'StudioSerif',
+        letterSpacing: -0.4,
+        height: 1.2,
+      ),
+      titleLarge: text.titleLarge?.copyWith(
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.5,
+      ),
+      titleMedium: text.titleMedium?.copyWith(
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.25,
+      ),
+      titleSmall: text.titleSmall?.copyWith(
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.1,
+      ),
+      bodyLarge: text.bodyLarge?.copyWith(height: 1.5, letterSpacing: 0),
+      bodyMedium: text.bodyMedium?.copyWith(height: 1.45, letterSpacing: 0),
+      bodySmall: text.bodySmall?.copyWith(height: 1.4, letterSpacing: 0),
       labelLarge: text.labelLarge?.copyWith(fontWeight: FontWeight.w600),
     );
 
     final cardShape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       side: BorderSide(color: scheme.outlineVariant),
     );
-    const pill = StadiumBorder();
+    final controlShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10),
+    );
     const flat = WidgetStatePropertyAll<double>(0);
 
     return base.copyWith(
@@ -228,6 +276,7 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
         centerTitle: false,
+        toolbarHeight: 64,
         titleTextStyle: textTheme.titleLarge,
       ),
       cardTheme: CardThemeData(
@@ -239,12 +288,23 @@ abstract final class AppTheme {
         shape: cardShape,
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: scheme.surface,
+        backgroundColor: scheme.surfaceContainerLowest,
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         indicatorColor: scheme.primaryContainer,
-        height: 68,
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        height: 72,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? scheme.primary
+                : scheme.onSurfaceVariant,
+            size: 23,
+          ),
+        ),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => textTheme.labelMedium?.copyWith(
             fontWeight: states.contains(WidgetState.selected)
@@ -254,9 +314,12 @@ abstract final class AppTheme {
         ),
       ),
       navigationRailTheme: NavigationRailThemeData(
-        backgroundColor: scheme.surface,
+        backgroundColor: scheme.surfaceContainerLowest,
         elevation: 0,
         indicatorColor: scheme.primaryContainer,
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
         selectedLabelTextStyle: textTheme.labelLarge?.copyWith(
           color: scheme.onSurface,
           fontWeight: FontWeight.w700,
@@ -269,8 +332,8 @@ abstract final class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: ButtonStyle(
           elevation: flat,
-          shape: const WidgetStatePropertyAll(pill),
-          minimumSize: const WidgetStatePropertyAll(Size(64, 44)),
+          shape: WidgetStatePropertyAll(controlShape),
+          minimumSize: const WidgetStatePropertyAll(Size(64, 46)),
           padding: const WidgetStatePropertyAll(
             EdgeInsets.symmetric(horizontal: 20),
           ),
@@ -279,8 +342,8 @@ abstract final class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: ButtonStyle(
           elevation: flat,
-          shape: const WidgetStatePropertyAll(pill),
-          minimumSize: const WidgetStatePropertyAll(Size(64, 44)),
+          shape: WidgetStatePropertyAll(controlShape),
+          minimumSize: const WidgetStatePropertyAll(Size(64, 46)),
           padding: const WidgetStatePropertyAll(
             EdgeInsets.symmetric(horizontal: 20),
           ),
@@ -290,14 +353,14 @@ abstract final class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(
-          shape: const WidgetStatePropertyAll(pill),
+          shape: WidgetStatePropertyAll(controlShape),
           minimumSize: const WidgetStatePropertyAll(Size(48, 40)),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
           elevation: flat,
-          shape: const WidgetStatePropertyAll(pill),
+          shape: WidgetStatePropertyAll(controlShape),
         ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
@@ -315,7 +378,7 @@ abstract final class AppTheme {
         backgroundColor: Colors.transparent,
         selectedColor: scheme.primaryContainer,
         labelStyle: textTheme.bodyMedium,
-        shape: const StadiumBorder(),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         side: WidgetStateBorderSide.resolveWith(
           (states) => BorderSide(
             color: states.contains(WidgetState.selected)
@@ -327,6 +390,7 @@ abstract final class AppTheme {
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
+          shape: WidgetStatePropertyAll(controlShape),
           side: WidgetStatePropertyAll(BorderSide(color: scheme.outline)),
           backgroundColor: WidgetStateProperty.resolveWith(
             (states) => states.contains(WidgetState.selected)
@@ -343,6 +407,13 @@ abstract final class AppTheme {
       inputDecorationTheme: InputDecorationThemeData(
         filled: true,
         fillColor: scheme.surfaceContainerLowest,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        labelStyle: textTheme.bodyMedium?.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: scheme.outline),
@@ -360,6 +431,11 @@ abstract final class AppTheme {
         color: scheme.outlineVariant,
         thickness: 1,
         space: 1,
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: scheme.primary,
+        linearTrackColor: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(6),
       ),
       listTileTheme: ListTileThemeData(
         iconColor: scheme.onSurfaceVariant,

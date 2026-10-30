@@ -12,7 +12,11 @@ class BrandMark extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final dot = size * 0.58;
-    final colors = [scheme.secondary, const Color(0xFFC9A27E), scheme.primary];
+    final colors = [
+      scheme.primary,
+      const Color(0xFFC3A181),
+      const Color(0xFF9FAA8B),
+    ];
 
     return SizedBox(
       width: size,
@@ -50,12 +54,30 @@ class BrandLockup extends StatelessWidget {
         const BrandMark(),
         const SizedBox(width: 10),
         Flexible(
-          child: Text(
-            AppInfo.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.1),
+          child: Semantics(
+            label: AppInfo.name,
+            excludeSemantics: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'ColorMix',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontFamily: 'StudioSerif',
+                    fontSize: 24,
+                    letterSpacing: -0.8,
+                  ),
+                ),
+                Text(
+                  'S T U D I O',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 9,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

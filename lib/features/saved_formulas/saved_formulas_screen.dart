@@ -55,12 +55,22 @@ class _SavedFormulasScreenState extends ConsumerState<SavedFormulasScreen> {
   Widget build(BuildContext context) {
     final narrow = MediaQuery.sizeOf(context).width < Breakpoints.rail;
     final pad = pagePadding(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     final switcher = SegmentedButton<SavedView>(
       showSelectedIcon: false,
       segments: const [
-        ButtonSegment(value: SavedView.formulas, label: Text('Formulas')),
-        ButtonSegment(value: SavedView.history, label: Text('History')),
+        ButtonSegment(
+          value: SavedView.formulas,
+          icon: Icon(Icons.receipt_long_outlined, size: 18),
+          label: Text('Formulas'),
+        ),
+        ButtonSegment(
+          value: SavedView.history,
+          icon: Icon(Icons.history, size: 18),
+          label: Text('History'),
+        ),
       ],
       selected: {_view},
       onSelectionChanged: (v) => setState(() => _view = v.single),
@@ -92,19 +102,45 @@ class _SavedFormulasScreenState extends ConsumerState<SavedFormulasScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(pad.left, 8, pad.right, 8),
-            child: narrow
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [switcher, const SizedBox(height: 10), search],
-                  )
-                : Row(
-                    children: [
-                      switcher,
-                      const Spacer(),
-                      SizedBox(width: 320, child: search),
-                    ],
+            padding: EdgeInsets.fromLTRB(pad.left, 8, pad.right, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Your studio archive.',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontFamily: 'StudioSerif',
+                    fontSize: narrow ? 28 : 38,
+                    height: 1.15,
+                    letterSpacing: -0.8,
                   ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Keep the formula. Learn from every mix.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(pad.left, 0, pad.right, 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) => constraints.maxWidth < 600
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [switcher, const SizedBox(height: 12), search],
+                    )
+                  : Row(
+                      children: [
+                        switcher,
+                        const SizedBox(width: 24),
+                        Expanded(child: search),
+                      ],
+                    ),
+            ),
           ),
           Expanded(
             child: _view == SavedView.formulas
@@ -185,11 +221,43 @@ class _SavedFormulasScreenState extends ConsumerState<SavedFormulasScreen> {
         ),
       );
     }
-    return ListView.separated(
-      padding: pad.copyWith(top: 0),
-      itemCount: items.length,
-      separatorBuilder: (_, _) => const Divider(indent: 60),
-      itemBuilder: (context, i) => tile(items[i]),
+    final theme = Theme.of(context);
+    final type = _view == SavedView.formulas ? 'formula' : 'session';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(pad.left, 0, pad.right, 12),
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            spacing: 16,
+            runSpacing: 4,
+            children: [
+              Text(
+                '${items.length} $type${items.length == 1 ? '' : 's'}'
+                '${_query.isEmpty ? '' : ' found'}',
+                style: theme.textTheme.labelMedium,
+              ),
+              Text(
+                _view == SavedView.formulas
+                    ? 'Recently updated first'
+                    : 'Most recent first',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.separated(
+            padding: pad.copyWith(top: 0),
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
+            itemBuilder: (context, i) => tile(items[i]),
+          ),
+        ),
+      ],
     );
   }
 }

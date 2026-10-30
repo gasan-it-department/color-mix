@@ -131,7 +131,7 @@ class _WizardState extends ConsumerState<_Wizard> {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600),
+        constraints: const BoxConstraints(maxWidth: 680),
         child: ListView(
           padding: EdgeInsets.fromLTRB(
             narrow ? 16 : 24,
@@ -414,10 +414,10 @@ class _Steps extends StatelessWidget {
           if (step.index > 0) const SizedBox(width: 6),
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
               decoration: BoxDecoration(
                 color: step == current ? scheme.primaryContainer : null,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: step == current
                       ? scheme.primaryContainer
@@ -488,6 +488,9 @@ class _LiveReading extends ConsumerWidget {
                 Text(
                   reading == null ? '—' : formatMilligrams(reading.milligrams),
                   style: theme.textTheme.displaySmall?.copyWith(
+                    fontFamily: 'StudioSans',
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: -1,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),

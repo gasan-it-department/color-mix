@@ -98,6 +98,8 @@ Map<String, Object?> _formulaToJson(ColorFormula f) => {
   'developerRatioHundredths': f.developerRatio?.hundredths,
   'developerVolume': f.developerVolume,
   'developerForm': f.developerForm.name,
+  'developerDensityMilli': f.developerDensityMilli,
+  'unit': f.unit.name,
   'developerDg': f.developerDg,
   'totalMixtureDg': f.totalMixtureDg,
   'notes': f.notes,
@@ -112,6 +114,7 @@ Map<String, Object?> _formulaToJson(ColorFormula f) => {
         'requiredDg': i.requiredDg,
         'displayRgb': i.displayRgb,
         'form': i.form.name,
+        'densityMilli': i.densityMilli,
       },
   ],
 };
@@ -133,6 +136,7 @@ ColorFormula _formulaFromJson(Map<String, Object?> m) {
           requiredDg: ir.count('requiredDg'),
           displayRgb: ir.rgb('displayRgb'),
           form: ir.form('form'),
+          densityMilli: ir.optDensity('densityMilli'),
         );
       }(),
   ];
@@ -148,6 +152,8 @@ ColorFormula _formulaFromJson(Map<String, Object?> m) {
     developerRatio: ratio == null || ratio == 0 ? null : DeveloperRatio(ratio),
     developerVolume: ri.optCount('developerVolume'),
     developerForm: ri.form('developerForm'),
+    developerDensityMilli: ri.optDensity('developerDensityMilli'),
+    unit: ri.unit('unit'),
     developerDg: ri.count('developerDg'),
     totalMixtureDg: ri.count('totalMixtureDg'),
     notes: ri.optString('notes'),
@@ -333,6 +339,22 @@ class _Reader {
   ProductForm form(String key) {
     final v = ProductForm.values.asNameMap()[m[key]];
     if (v == null) _bad(key);
+    return v;
+  }
+
+  /// files from before units default to grams
+  MeasureUnit unit(String key) {
+    if (m[key] == null) return MeasureUnit.g;
+    final v = MeasureUnit.values.asNameMap()[m[key]];
+    if (v == null) _bad(key);
+    return v;
+  }
+
+  /// files from before densities have none, which means the usual figure
+  int? optDensity(String key) {
+    final v = m[key];
+    if (v == null) return null;
+    if (v is! int || v < minDensityMilli || v > maxDensityMilli) _bad(key);
     return v;
   }
 

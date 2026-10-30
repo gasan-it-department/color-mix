@@ -8,12 +8,12 @@ import 'package:colormix_studio/features/color_studio/color_target.dart';
 import 'package:colormix_studio/shared/data/demo_catalog.dart';
 import 'package:colormix_studio/shared/models/hair_color.dart';
 
-/// demo shades grouped by family
+/// A physical swatch-book layout. The sample itself is always the exact RGB
+/// color; selection and recipe marks sit outside that color reference.
 class PaletteGrid extends ConsumerWidget {
   const PaletteGrid({super.key});
 
-  static const _gap = 8.0;
-  static const _minTile = 112.0;
+  static const _gap = 10.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,15 +21,18 @@ class PaletteGrid extends ConsumerWidget {
       colorTargetProvider.select((t) => t?.shade?.id),
     );
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
 
     return LayoutBuilder(
       builder: (context, c) {
+        final compact = c.maxWidth < 440;
+        final minTile = compact ? 98.0 : 116.0;
         final cols = math.max(
-          3,
-          ((c.maxWidth + _gap) / (_minTile + _gap)).floor(),
+          1,
+          ((c.maxWidth + _gap) / (minTile * textScale + _gap)).floor(),
         );
         final tileWidth = (c.maxWidth - _gap * (cols - 1)) / cols;
-
         final groups = [
           for (final cat in HairColorCategory.values)
             (cat, demoShades.where((s) => s.category == cat).toList()),
@@ -40,12 +43,21 @@ class PaletteGrid extends ConsumerWidget {
           children: [
             for (final (i, (cat, shades)) in groups.indexed) ...[
               Padding(
-                padding: EdgeInsets.only(top: i == 0 ? 0 : 20, bottom: 8),
-                child: Text(
-                  categoryLabel(cat),
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                padding: EdgeInsets.only(top: i == 0 ? 0 : 20, bottom: 10),
+                child: Row(
+                  children: [
+                    Text(categoryLabel(cat), style: theme.textTheme.titleSmall),
+                    const SizedBox(width: 10),
+                    Text(
+                      shades.length.toString().padLeft(2, '0'),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(child: Divider(color: scheme.outlineVariant)),
+                  ],
                 ),
               ),
               Wrap(
@@ -57,6 +69,7 @@ class PaletteGrid extends ConsumerWidget {
                       width: tileWidth,
                       child: _ShadeTile(
                         shade: s,
+                        compact: compact,
                         selected: s.id == selectedId,
                         onTap: () =>
                             ref.read(colorTargetProvider.notifier).pickShade(s),
@@ -75,11 +88,13 @@ class PaletteGrid extends ConsumerWidget {
 class _ShadeTile extends StatelessWidget {
   const _ShadeTile({
     required this.shade,
+    required this.compact,
     required this.selected,
     required this.onTap,
   });
 
   final HairColor shade;
+  final bool compact;
   final bool selected;
   final VoidCallback onTap;
 
@@ -89,10 +104,12 @@ class _ShadeTile extends StatelessWidget {
     final scheme = theme.colorScheme;
     final hasRecipe = shade.demoFormulaId != null;
     final nameStyle = theme.textTheme.bodyMedium?.copyWith(
-      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-      height: 1.25,
-      color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+      fontWeight: FontWeight.w600,
+      height: 1.2,
+      color: scheme.onSurface,
     );
+    final scaledName = MediaQuery.textScalerOf(context)
+        .scale(nameStyle?.fontSize ?? 14);
 
     return Semantics(
       selected: selected,
@@ -108,81 +125,74 @@ class _ShadeTile extends StatelessWidget {
             ? scheme.primaryContainer
             : scheme.surfaceContainerLowest,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           side: BorderSide(
             color: selected ? scheme.primary : scheme.outlineVariant,
-            width: selected ? 1.5 : 1,
+            width: selected ? 2 : 1,
           ),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Stack(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                height: compact ? 60 : 96,
+                margin: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: colorFromRgb(shade.rgb),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 4, 10, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: colorFromRgb(shade.rgb),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: scheme.outline.withValues(alpha: 0.35),
-                        ),
+                    SizedBox(
+                      height: scaledName * 1.2 * 2 + 2,
+                      child: Text(
+                        shade.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: nameStyle,
                       ),
                     ),
-                    if (hasRecipe)
-                      Positioned(
-                        top: 6,
-                        right: 6,
-                        child: Container(
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            color: scheme.surfaceContainerLowest,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.receipt_long,
-                            size: 13,
-                            color: scheme.primary,
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            shade.levelTone != null
+                                ? 'Level ${shade.levelTone}'
+                                : shade.hexValue,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
+                        if (selected || hasRecipe) ...[
+                          const SizedBox(width: 4),
+                          Icon(
+                            selected ? Icons.check_circle : Icons.receipt_long,
+                            size: 14,
+                            color: selected
+                                ? scheme.primary
+                                : scheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  // two lines kept even for short names so rows line up
-                  child: SizedBox(
-                    height: (nameStyle?.fontSize ?? 14) * 1.25 * 2 + 2,
-                    child: Text(
-                      shade.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: nameStyle,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
-                  child: Text(
-                    shade.levelTone != null
-                        ? 'Level ${shade.levelTone}'
-                        : shade.hexValue,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

@@ -44,6 +44,7 @@ class StepPlan {
     required this.targetAddedMg,
     this.isDeveloper = false,
     this.form = ProductForm.cream,
+    this.densityMilli = 1000,
   });
 
   final String name;
@@ -53,6 +54,9 @@ class StepPlan {
 
   /// sets the slow-down band and the pour hints
   final ProductForm form;
+
+  /// g per mL × 1000, only for showing the target in mL or fl oz
+  final int densityMilli;
 }
 
 class StepRecord {
@@ -79,6 +83,7 @@ List<StepPlan> stepsFor(ColorFormula f) => [
       rgb: i.displayRgb,
       targetAddedMg: i.requiredDg * 100,
       form: i.form,
+      densityMilli: i.density,
     ),
   if (f.developerDg > 0)
     StepPlan(
@@ -89,6 +94,7 @@ List<StepPlan> stepsFor(ColorFormula f) => [
       targetAddedMg: f.developerDg * 100,
       isDeveloper: true,
       form: f.developerForm,
+      densityMilli: f.developerDensity,
     ),
 ];
 

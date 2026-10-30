@@ -4,7 +4,7 @@ import 'package:colormix_studio/app/theme.dart';
 
 enum TagTone { neutral, accent, warning, success }
 
-/// small pill label: 'Demo only', 'Custom color'...
+/// Compact informational label: 'Demo only', 'Custom color'...
 class LabelTag extends StatelessWidget {
   const LabelTag(this.text, {super.key, this.tone = TagTone.neutral});
 
@@ -27,7 +27,7 @@ class LabelTag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
         text,

@@ -24,10 +24,32 @@ class AppPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final narrow = MediaQuery.sizeOf(context).width < Breakpoints.rail;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: titleWidget ?? Text(title),
+        toolbarHeight: narrow ? 64 : 84,
+        titleSpacing: narrow ? 20 : 32,
+        title:
+            titleWidget ??
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!narrow) ...[
+                  Text(
+                    'COLORMIX / WORKSPACE',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      letterSpacing: 1.6,
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                ],
+                Text(title),
+              ],
+            ),
         actions: [
           ...actions,
           if (narrow && showSettings)
@@ -55,5 +77,5 @@ class AppPage extends StatelessWidget {
 /// horizontal page padding, tighter on phones
 EdgeInsets pagePadding(BuildContext context) {
   final narrow = MediaQuery.sizeOf(context).width < Breakpoints.rail;
-  return EdgeInsets.fromLTRB(narrow ? 16 : 24, 8, narrow ? 16 : 24, 24);
+  return EdgeInsets.fromLTRB(narrow ? 20 : 32, 12, narrow ? 20 : 32, 32);
 }

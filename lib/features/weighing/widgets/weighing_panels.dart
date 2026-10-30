@@ -6,6 +6,7 @@ import 'package:colormix_studio/core/widgets/confirm_sheet.dart';
 import 'package:colormix_studio/features/weighing/weighing_controller.dart';
 import 'package:colormix_studio/features/weighing/weighing_state.dart';
 import 'package:colormix_studio/features/weighing/widgets/weighing_bits.dart';
+import 'package:colormix_studio/shared/models/measure_unit.dart';
 import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
 import 'package:colormix_studio/shared/widgets/label_tag.dart';
 
@@ -13,7 +14,7 @@ BoxDecoration _panel(BuildContext context, {Color? color, Color? border}) {
   final scheme = Theme.of(context).colorScheme;
   return BoxDecoration(
     color: color ?? scheme.surfaceContainerLowest,
-    borderRadius: BorderRadius.circular(20),
+    borderRadius: BorderRadius.circular(24),
     border: Border.all(color: border ?? scheme.outlineVariant),
   );
 }
@@ -53,7 +54,10 @@ class PreparePanel extends StatelessWidget {
             placing
                 ? 'Put the empty bowl on the scale'
                 : 'Check it reads about 0.0 g',
-            style: theme.textTheme.headlineSmall,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontFamily: 'StudioSerif',
+              height: 1.15,
+            ),
           ),
           const SizedBox(height: 16),
           BigWeight(
@@ -166,8 +170,9 @@ class PourPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ColorSwatchDot(rgb: s.step.rgb, size: 36),
+              ColorSwatchDot(rgb: s.step.rgb, size: 40),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -184,7 +189,8 @@ class PourPanel extends StatelessWidget {
                         Text(
                           s.step.name,
                           style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
+                            fontFamily: 'StudioSerif',
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         LabelTag(s.step.form.label),
@@ -193,9 +199,10 @@ class PourPanel extends StatelessWidget {
                   ],
                 ),
               ),
-              StabilityChip(live: s.live, stable: s.stable),
             ],
           ),
+          const SizedBox(height: 12),
+          StabilityChip(live: s.live, stable: s.stable),
           const SizedBox(height: 16),
           Text('Added', style: muted),
           BigWeight(
@@ -203,17 +210,25 @@ class PourPanel extends StatelessWidget {
             color: fg,
           ),
           Text(
-            'of ${formatMilligrams(s.targetAddedMg)}',
+            [
+              'of ${formatMilligrams(s.targetAddedMg)}',
+              // the scale weighs grams, this is what the formula said
+              if (s.formula.unit != MeasureUnit.g)
+                s.formula.unit.format(
+                  s.targetAddedMg,
+                  densityMilli: s.step.densityMilli,
+                ),
+            ].join(' · '),
             style: theme.textTheme.titleMedium?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 14),
           ClipRRect(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
               value: progress == null ? 0 : progress.clamp(0.0, 1.0),
-              minHeight: 14,
+              minHeight: 10,
               color: zone == PourZone.under || zone == PourZone.waiting
                   ? scheme.primary
                   : fg,
@@ -311,6 +326,8 @@ class _Stat extends StatelessWidget {
         Text(
           value,
           style: theme.textTheme.titleLarge?.copyWith(
+            fontFamily: 'StudioSans',
+            fontWeight: FontWeight.w600,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),

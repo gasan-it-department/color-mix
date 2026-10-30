@@ -1,8 +1,10 @@
 // weights are whole decigrams (0.1 g) and percentages whole hundredths of a
 // percent (10000 = 100%) so the maths stays exact
 
+import 'package:colormix_studio/shared/models/measure_unit.dart';
 import 'package:colormix_studio/shared/models/product_form.dart';
 
+export 'package:colormix_studio/shared/models/measure_unit.dart';
 export 'package:colormix_studio/shared/models/product_form.dart';
 
 /// developer parts per one part dye, by weight. 150 = 1:1.5
@@ -46,6 +48,7 @@ class FormulaIngredient {
     required this.requiredDg,
     required this.displayRgb,
     this.form = ProductForm.cream,
+    this.densityMilli,
   });
 
   final String id;
@@ -61,12 +64,19 @@ class FormulaIngredient {
   /// cream, liquid or powder: how it pours, still weighed in grams
   final ProductForm form;
 
+  /// g per mL × 1000 from the product sheet, for showing it in mL. null
+  /// uses the form's usual figure
+  final int? densityMilli;
+
+  int get density => densityMilli ?? form.densityMilli;
+
   FormulaIngredient copyWith({
     String? name,
     int? percentHundredths,
     int? requiredDg,
     int? displayRgb,
     ProductForm? form,
+    int? Function()? densityMilli,
   }) {
     return FormulaIngredient(
       id: id,
@@ -75,6 +85,7 @@ class FormulaIngredient {
       requiredDg: requiredDg ?? this.requiredDg,
       displayRgb: displayRgb ?? this.displayRgb,
       form: form ?? this.form,
+      densityMilli: densityMilli != null ? densityMilli() : this.densityMilli,
     );
   }
 }
@@ -95,6 +106,8 @@ class ColorFormula {
     this.developerRatio,
     this.developerVolume,
     this.developerForm = ProductForm.cream,
+    this.developerDensityMilli,
+    this.unit = MeasureUnit.g,
     this.notes,
   });
 
@@ -116,13 +129,47 @@ class ColorFormula {
 
   /// cream or liquid developer, for the pour hints
   final ProductForm developerForm;
+
+  /// g per mL × 1000 from the developer's sheet, null uses the form's figure
+  final int? developerDensityMilli;
   final int developerDg;
   final int totalMixtureDg;
+
+  /// what the amounts are typed and shown in. stored and weighed in grams
+  /// whatever this says
+  final MeasureUnit unit;
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   bool get hasDeveloper => developerRatio != null;
+
+  int get developerDensity =>
+      developerDensityMilli ?? developerForm.densityMilli;
+
+  /// an amount in this formula's unit, for a product of [densityMilli]
+  String show(int dg, {int densityMilli = 1000}) =>
+      unit.formatDg(dg, densityMilli: densityMilli);
+
+  /// the dye in this formula's unit: each color by its own density, so a
+  /// volume adds up color by color
+  String showDye() => unit.isVolume
+      ? _sumVolumes([for (final i in ingredients) (i.requiredDg, i.density)])
+      : show(totalDyeDg);
+
+  String showMixture() => unit.isVolume
+      ? _sumVolumes([
+          for (final i in ingredients) (i.requiredDg, i.density),
+          (developerDg, developerDensity),
+        ])
+      : show(totalMixtureDg);
+
+  String _sumVolumes(List<(int, int)> parts) => unit.formatValue(
+    parts.fold<double>(
+      0,
+      (s, p) => s + unit.fromMg(p.$1 * 100, densityMilli: p.$2),
+    ),
+  );
 
   ColorFormula copyWith({
     String? name,
@@ -132,8 +179,10 @@ class ColorFormula {
     DeveloperRatio? Function()? developerRatio,
     int? Function()? developerVolume,
     ProductForm? developerForm,
+    int? Function()? developerDensityMilli,
     int? developerDg,
     int? totalMixtureDg,
+    MeasureUnit? unit,
     String? Function()? notes,
     bool? isDemo,
     DateTime? updatedAt,
@@ -153,8 +202,12 @@ class ColorFormula {
           ? developerVolume()
           : this.developerVolume,
       developerForm: developerForm ?? this.developerForm,
+      developerDensityMilli: developerDensityMilli != null
+          ? developerDensityMilli()
+          : this.developerDensityMilli,
       developerDg: developerDg ?? this.developerDg,
       totalMixtureDg: totalMixtureDg ?? this.totalMixtureDg,
+      unit: unit ?? this.unit,
       notes: notes != null ? notes() : this.notes,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

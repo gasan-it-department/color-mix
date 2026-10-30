@@ -24,46 +24,52 @@ class EmptyState extends StatelessWidget {
     final scheme = theme.colorScheme;
     final badge = compact ? 44.0 : 56.0;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: compact ? 20 : 48,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: badge,
-            height: badge,
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHigh,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              size: badge * 0.46,
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
-          SizedBox(height: compact ? 12 : 16),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.titleMedium,
-          ),
-          const SizedBox(height: 4),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
-            child: Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: compact ? 20 : 48,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: badge,
+              height: badge,
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: scheme.outlineVariant),
+              ),
+              child: Icon(
+                icon,
+                size: badge * 0.46,
                 color: scheme.onSurfaceVariant,
               ),
             ),
-          ),
-          if (action != null) ...[SizedBox(height: compact ? 12 : 20), action!],
-        ],
+            SizedBox(height: compact ? 12 : 16),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 4),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            if (action != null) ...[
+              SizedBox(height: compact ? 12 : 20),
+              action!,
+            ],
+          ],
+        ),
       ),
     );
   }
