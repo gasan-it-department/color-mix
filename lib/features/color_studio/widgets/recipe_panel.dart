@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
 import 'package:colormix_studio/core/utils/color_utils.dart';
@@ -87,7 +88,7 @@ class _RecipeBody extends StatelessWidget {
       children: [
         ExcludeSemantics(
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(Radii.sm),
             child: SizedBox(
               height: 8,
               child: Row(
@@ -187,7 +188,7 @@ class _NearestShade extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Radii.md),
       ),
       child: Row(
         children: [

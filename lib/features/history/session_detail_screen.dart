@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
 import 'package:colormix_studio/core/widgets/confirm_sheet.dart';
@@ -13,6 +14,7 @@ import 'package:colormix_studio/features/weighing/session_repository.dart';
 import 'package:colormix_studio/features/weighing/widgets/weighing_bits.dart';
 import 'package:colormix_studio/shared/models/weighing_session.dart';
 import 'package:colormix_studio/shared/widgets/label_tag.dart';
+import 'package:colormix_studio/core/widgets/app_page.dart';
 
 /// what happened in one weighing: totals, then target vs added per step
 class SessionDetailScreen extends ConsumerWidget {
@@ -90,7 +92,7 @@ class _Detail extends ConsumerWidget {
     // old sessions didn't record it, judge them by today's setting
     final toleranceMg =
         s.toleranceMg ?? ref.watch(settingsProvider).toleranceDg * 100;
-    final narrow = MediaQuery.sizeOf(context).width < Breakpoints.rail;
+    final narrow = isNarrow(context);
 
     final plannedMg = s.plannedTotalDg * 100;
     final weighed = s.weighedMg;
@@ -111,7 +113,9 @@ class _Detail extends ConsumerWidget {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 880),
+        constraints: const BoxConstraints(
+          maxWidth: Breakpoints.readingMaxWidth,
+        ),
         child: ListView(
           padding: EdgeInsets.fromLTRB(
             narrow ? 16 : 24,
@@ -123,8 +127,8 @@ class _Detail extends ConsumerWidget {
             Container(
               padding: EdgeInsets.all(narrow ? 18 : 28),
               decoration: BoxDecoration(
-                color: scheme.primaryContainer.withValues(alpha: 0.45),
-                borderRadius: BorderRadius.circular(20),
+                color: scheme.primaryContainer,
+                borderRadius: BorderRadius.circular(Radii.xl),
                 border: Border.all(color: scheme.outlineVariant),
               ),
               child: Column(
@@ -132,11 +136,7 @@ class _Detail extends ConsumerWidget {
                 children: [
                   Text(
                     'MIX RECORD',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: scheme.primary,
-                      letterSpacing: 1.8,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: context.type.eyebrow.copyWith(color: scheme.primary),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -145,12 +145,7 @@ class _Detail extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           s.formulaName,
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontFamily: 'StudioSerif',
-                            fontSize: narrow ? 28 : 36,
-                            height: 1.15,
-                            letterSpacing: -0.5,
-                          ),
+                          style: context.type.pageTitleFor(narrow: narrow),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -201,6 +196,21 @@ class _Detail extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 20),
+            if (s.formulaId != null)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: () => context.push(Routes.formula(s.formulaId!)),
+                  icon: const Icon(Icons.receipt_long_outlined, size: 18),
+                  label: const Text('Open formula'),
+                ),
+              )
+            else
+              Text(
+                'The formula was deleted. This record of the weighing stays.',
+                style: muted,
+              ),
+            const SizedBox(height: 16),
             SectionCard(
               title: 'Each step',
               child: Column(
@@ -228,21 +238,6 @@ class _Detail extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            if (s.formulaId != null)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: OutlinedButton.icon(
-                  onPressed: () => context.push(Routes.formula(s.formulaId!)),
-                  icon: const Icon(Icons.receipt_long_outlined, size: 18),
-                  label: const Text('Open formula'),
-                ),
-              )
-            else
-              Text(
-                'The formula was deleted. This record of the weighing stays.',
-                style: muted,
-              ),
           ],
         ),
       ),
@@ -278,7 +273,6 @@ class _Stat extends StatelessWidget {
         Text(
           value,
           style: theme.textTheme.titleLarge?.copyWith(
-            fontFamily: 'StudioSans',
             fontSize: 26,
             height: 1.5,
             letterSpacing: -0.8,

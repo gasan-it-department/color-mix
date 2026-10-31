@@ -71,7 +71,7 @@ class CameraPanel extends ConsumerWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: colorFromRgb(last.rgb!),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(Radii.sm),
                     border: Border.all(color: scheme.outlineVariant),
                   ),
                 ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/shared/models/product_form.dart';
 import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
 
@@ -106,7 +107,7 @@ class PartRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(Radii.sm),
       ),
       child: Text(
         amount,

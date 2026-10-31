@@ -395,7 +395,7 @@ class _Result extends StatelessWidget {
               height: 64,
               decoration: BoxDecoration(
                 color: colorFromRgb(rgb),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(Radii.md),
                 border: Border.all(color: scheme.outlineVariant),
               ),
             ),
@@ -431,7 +431,7 @@ class _Result extends StatelessWidget {
                 height: 14,
                 decoration: BoxDecoration(
                   color: colorFromRgb(reading.cameraRgb!),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(Radii.sm),
                   border: Border.all(color: scheme.outlineVariant),
                 ),
               ),

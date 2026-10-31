@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/shared/widgets/brand_mark.dart';
 
@@ -132,14 +133,7 @@ class _Sidebar extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 0, 0, 14),
-                child: Text(
-                  'THE WORKSPACE',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    letterSpacing: 1.5,
-                    fontSize: 10,
-                  ),
-                ),
+                child: Text('THE WORKSPACE', style: context.type.eyebrow),
               ),
               for (final (i, d) in _destinations.indexed)
                 _SidebarItem(
@@ -215,7 +209,8 @@ class _SidebarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final fg = selected ? scheme.onPrimary : scheme.onSurfaceVariant;
+    // the same pale wash as the bottom bar and the rail
+    final fg = selected ? scheme.onPrimaryContainer : scheme.onSurfaceVariant;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -223,9 +218,9 @@ class _SidebarItem extends StatelessWidget {
         selected: selected,
         button: true,
         child: Material(
-          color: selected ? scheme.primary : Colors.transparent,
+          color: selected ? scheme.primaryContainer : Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(Radii.md),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -243,7 +238,9 @@ class _SidebarItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        color: selected ? scheme.onPrimary : scheme.onSurface,
+                        color: selected
+                            ? scheme.onPrimaryContainer
+                            : scheme.onSurface,
                         fontWeight: selected
                             ? FontWeight.w700
                             : FontWeight.w500,

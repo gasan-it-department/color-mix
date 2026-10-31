@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:colormix_studio/app/theme.dart';
+
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
@@ -38,7 +40,7 @@ class EmptyState extends StatelessWidget {
               height: badge,
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(Radii.lg),
                 border: Border.all(color: scheme.outlineVariant),
               ),
               child: Icon(

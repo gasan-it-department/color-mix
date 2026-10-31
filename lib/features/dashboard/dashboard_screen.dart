@@ -19,7 +19,7 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final narrow = MediaQuery.sizeOf(context).width < Breakpoints.rail;
+    final narrow = isNarrow(context);
     return AppPage(
       title: 'Home',
       titleWidget: narrow ? const BrandLockup() : null,
@@ -72,7 +72,7 @@ class _StudioWelcome extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: scheme.primaryContainer,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(Radii.xl),
       ),
       clipBehavior: Clip.antiAlias,
       child: LayoutBuilder(
@@ -89,10 +89,8 @@ class _StudioWelcome extends StatelessWidget {
                     children: [
                       Text(
                         'A LITTLE COLOR. A LOT OF POSSIBILITY.',
-                        style: theme.textTheme.labelSmall?.copyWith(
+                        style: context.type.eyebrow.copyWith(
                           color: scheme.onPrimaryContainer,
-                          letterSpacing: 1.2,
-                          fontSize: 10,
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -181,13 +179,16 @@ class _SwatchFanPainter extends CustomPainter {
         const Rect.fromLTWH(-40, -206, 82, 216),
         const Radius.circular(9),
       );
-      canvas.drawShadow(
-        Path()..addRRect(paper),
-        const Color(0xFF283125).withValues(alpha: 0.25),
-        4,
-        true,
-      );
-      canvas.drawRRect(paper, Paint()..color = const Color(0xFFFAF6EC));
+      // a line, not a shadow, keeps each paper apart from the one under it
+      canvas
+        ..drawRRect(paper, Paint()..color = const Color(0xFFFAF6EC))
+        ..drawRRect(
+          paper,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1
+            ..color = const Color(0xFFCFC8B6),
+        );
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           const Rect.fromLTWH(-34, -200, 70, 158),

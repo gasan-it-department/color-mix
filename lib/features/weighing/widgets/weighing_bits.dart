@@ -7,6 +7,7 @@ import 'package:colormix_studio/shared/models/product_form.dart';
 import 'package:colormix_studio/shared/models/weighing_session.dart';
 import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
 import 'package:colormix_studio/shared/widgets/label_tag.dart';
+import 'package:colormix_studio/core/widgets/app_page.dart';
 
 // small pieces shared by the weighing panels
 
@@ -40,21 +41,16 @@ class BigWeight extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.sizeOf(context).width >= 900;
-    final base = Theme.of(context).textTheme.displayLarge!;
+    final wide = isTwoPane(context);
     return FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.centerLeft,
       child: Text(
         text,
-        style: base.copyWith(
-          fontSize: wide ? 96 : 64,
-          fontFamily: 'StudioSans',
-          fontWeight: FontWeight.w500,
-          letterSpacing: -2.5,
-          height: 1.05,
+        // bigger still on a tablet propped by the bowl
+        style: context.type.figure.copyWith(
+          fontSize: wide ? 96 : null,
           color: color,
-          fontFeatures: const [FontFeature.tabularFigures()],
         ),
       ),
     );
@@ -71,11 +67,16 @@ class StabilityChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final status = context.status;
-    final (icon, text, color) = !live
-        ? (Icons.portable_wifi_off, 'No reading', scheme.onSurfaceVariant)
+    final quiet = (scheme.surfaceContainerHigh, scheme.onSurfaceVariant);
+    final (icon, text, (wash, color)) = !live
+        ? (Icons.portable_wifi_off, 'No reading', quiet)
         : stable
-        ? (Icons.check_circle_outline, 'Steady', status.success)
-        : (Icons.waves, 'Settling…', scheme.onSurfaceVariant);
+        ? (
+            Icons.check_circle_outline,
+            'Steady',
+            (status.successWash, status.success),
+          )
+        : (Icons.waves, 'Settling…', quiet);
 
     return Align(
       alignment: Alignment.centerLeft,
@@ -83,8 +84,8 @@ class StabilityChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(8),
+          color: wash,
+          borderRadius: BorderRadius.circular(Radii.sm),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -134,8 +135,7 @@ class StatusBanner extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: fg.withValues(alpha: 0.35)),
+        borderRadius: BorderRadius.circular(Radii.lg),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -449,7 +449,7 @@ class StepList extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: current ? scheme.primaryContainer : null,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(Radii.md),
         ),
         child: Row(
           children: [

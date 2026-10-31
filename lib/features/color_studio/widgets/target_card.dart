@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/utils/color_utils.dart';
 import 'package:colormix_studio/features/color_studio/color_target.dart';
 import 'package:colormix_studio/features/color_studio/widgets/recipe_panel.dart';
@@ -33,7 +34,7 @@ class TargetCard extends ConsumerWidget {
               height: 132,
               decoration: BoxDecoration(
                 color: colorFromRgb(rgb),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(Radii.md),
                 border: Border.all(color: scheme.outlineVariant),
               ),
             ),
@@ -41,9 +42,7 @@ class TargetCard extends ConsumerWidget {
             Text(
               target.name,
               style: theme.textTheme.headlineSmall?.copyWith(
-                fontFamily: 'StudioSerif',
                 fontWeight: FontWeight.w400,
-                letterSpacing: -0.4,
               ),
             ),
             const SizedBox(height: 6),
@@ -111,13 +110,7 @@ class _UnselectedTarget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'YOUR COLOR TARGET',
-              style: theme.textTheme.labelSmall?.copyWith(
-                letterSpacing: 1.3,
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
+            Text('YOUR COLOR TARGET', style: context.type.eyebrow),
             const SizedBox(height: 24),
             ExcludeSemantics(
               child: SizedBox(
@@ -133,7 +126,7 @@ class _UnselectedTarget extends StatelessWidget {
                           height: 124,
                           decoration: BoxDecoration(
                             color: scheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(Radii.md),
                             border: Border.all(color: scheme.outlineVariant),
                           ),
                         ),
@@ -147,7 +140,7 @@ class _UnselectedTarget extends StatelessWidget {
                             height: 124,
                             decoration: BoxDecoration(
                               color: scheme.surfaceContainerLowest,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(Radii.md),
                               border: Border.all(color: scheme.outlineVariant),
                             ),
                             padding: const EdgeInsets.all(10),
@@ -158,7 +151,9 @@ class _UnselectedTarget extends StatelessWidget {
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
                                       color: scheme.primaryContainer,
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: BorderRadius.circular(
+                                        Radii.sm,
+                                      ),
                                     ),
                                     child: Icon(
                                       Icons.add,
@@ -183,7 +178,6 @@ class _UnselectedTarget extends StatelessWidget {
             Text(
               'No color picked',
               style: theme.textTheme.headlineSmall?.copyWith(
-                fontFamily: 'StudioSerif',
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -290,7 +284,7 @@ class TargetStrip extends ConsumerWidget {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLowest,
           border: Border.all(color: scheme.outlineVariant),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(Radii.lg),
         ),
         child: Padding(
           padding: const EdgeInsets.all(10),
@@ -303,7 +297,7 @@ class TargetStrip extends ConsumerWidget {
                   color: target == null
                       ? scheme.primaryContainer
                       : colorFromRgb(target.rgb),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(Radii.sm),
                   border: Border.all(color: scheme.outlineVariant),
                 ),
                 child: target == null

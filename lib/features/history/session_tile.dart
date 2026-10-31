@@ -52,10 +52,11 @@ class SessionTile extends StatelessWidget {
     final scheme = theme.colorScheme;
     final s = session;
     final look = statusLook(s.status);
-    final iconColor = switch (look.tone) {
-      TagTone.success => context.status.success,
-      TagTone.warning => context.status.warning,
-      _ => scheme.onSurfaceVariant,
+    final (wash, iconColor) = switch (look.tone) {
+      TagTone.success => (context.status.successWash, context.status.success),
+      TagTone.warning => (context.status.warningWash, context.status.warning),
+      TagTone.accent => (scheme.primaryContainer, scheme.onPrimaryContainer),
+      TagTone.neutral => (scheme.surfaceContainerHigh, scheme.onSurfaceVariant),
     };
     final when = sessionWhen.format(s.startedAt);
     final steps = '${s.doneSteps} of ${s.steps.length} steps';
@@ -63,7 +64,7 @@ class SessionTile extends StatelessWidget {
     return Material(
       color: scheme.surfaceContainerLowest,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(Radii.lg),
         side: BorderSide(color: scheme.outlineVariant),
       ),
       clipBehavior: Clip.antiAlias,
@@ -81,8 +82,8 @@ class SessionTile extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.09),
-                      borderRadius: BorderRadius.circular(10),
+                      color: wash,
+                      borderRadius: BorderRadius.circular(Radii.md),
                     ),
                     child: Icon(look.icon, size: 20, color: iconColor),
                   ),
@@ -149,7 +150,7 @@ class SessionTile extends StatelessWidget {
                           color: s.steps[i].isDone
                               ? iconColor
                               : scheme.outlineVariant,
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: BorderRadius.circular(Radii.bar),
                         ),
                       ),
                     ),

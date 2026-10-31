@@ -56,7 +56,7 @@ class ResultCard extends StatelessWidget {
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(Radii.lg),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,12 +73,8 @@ class ResultCard extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     r.mixtureAmount,
-                    style: theme.textTheme.displaySmall?.copyWith(
-                      fontFamily: 'StudioSans',
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -1.5,
+                    style: context.type.figureSmall.copyWith(
                       color: scheme.onPrimaryContainer,
-                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ),

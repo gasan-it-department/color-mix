@@ -80,12 +80,7 @@ class _StartSheetState extends ConsumerState<_StartSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Ready to weigh',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontFamily: 'StudioSerif',
-              ),
-            ),
+            Text('Ready to weigh', style: theme.textTheme.headlineSmall),
             const SizedBox(height: 4),
             Text(f.name, style: muted),
             const SizedBox(height: 16),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:colormix_studio/app/font_licences.dart';
 import 'package:colormix_studio/core/database/app_database.dart';
 import 'package:colormix_studio/features/settings/app_settings.dart';
 import 'package:colormix_studio/features/settings/settings_repository.dart';
@@ -136,6 +137,25 @@ void main() {
     await tap(tester, find.text('Calibrate'));
     expect(find.text('Calibrate the scale'), findsOneWidget);
     expect(find.text('Empty the platform'), findsOneWidget);
+
+    await unmountApp(tester);
+  });
+
+  testWidgets('the fonts\' licences are there and the page opens', (
+    tester,
+  ) async {
+    final entries = (await tester.runAsync(() => fontLicences().toList()))!;
+    expect(entries.expand((e) => e.packages), ['DM Sans', 'Fraunces']);
+    for (final e in entries) {
+      expect(
+        e.paragraphs.map((p) => p.text).join(' '),
+        contains('SIL Open Font License'),
+      );
+    }
+
+    await openSettings(tester);
+    await tap(tester, find.text('Licences'));
+    expect(find.textContaining('ColorMix Studio'), findsWidgets);
 
     await unmountApp(tester);
   });

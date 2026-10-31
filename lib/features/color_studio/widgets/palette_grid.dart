@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/utils/color_utils.dart';
 import 'package:colormix_studio/features/color_studio/color_target.dart';
 import 'package:colormix_studio/shared/data/demo_catalog.dart';
@@ -125,7 +126,7 @@ class _ShadeTile extends StatelessWidget {
             ? scheme.primaryContainer
             : scheme.surfaceContainerLowest,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(Radii.md),
           side: BorderSide(
             color: selected ? scheme.primary : scheme.outlineVariant,
             width: selected ? 2 : 1,
@@ -142,7 +143,7 @@ class _ShadeTile extends StatelessWidget {
                 margin: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
                   color: colorFromRgb(shade.rgb),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(Radii.sm),
                 ),
               ),
               Padding(

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/utils/color_utils.dart';
 import 'package:colormix_studio/core/widgets/section_card.dart';
 import 'package:colormix_studio/features/color_studio/color_target.dart';
@@ -122,7 +123,7 @@ class _CustomPickerState extends ConsumerState<CustomPicker> {
           final wheel = DecoratedBox(
             decoration: BoxDecoration(
               color: scheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(Radii.xl),
             ),
             child: Padding(
               padding: const EdgeInsets.all(12),
@@ -424,7 +425,7 @@ class _Channel extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(Radii.md),
       ),
       child: Text.rich(
         TextSpan(

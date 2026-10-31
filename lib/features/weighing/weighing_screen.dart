@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/core/bluetooth/scale_device.dart';
 import 'package:colormix_studio/core/bluetooth/scale_providers.dart';
 import 'package:colormix_studio/core/bluetooth/simulated_scale.dart';
@@ -17,6 +18,7 @@ import 'package:colormix_studio/features/weighing/weighing_controller.dart';
 import 'package:colormix_studio/features/weighing/weighing_state.dart';
 import 'package:colormix_studio/features/weighing/widgets/weighing_bits.dart';
 import 'package:colormix_studio/features/weighing/widgets/weighing_panels.dart';
+import 'package:colormix_studio/core/widgets/app_page.dart';
 
 /// full screen, big numbers, screen kept on
 class WeighingScreen extends ConsumerStatefulWidget {
@@ -88,7 +90,7 @@ class _WeighingView extends ConsumerWidget {
     final s = state;
     final ctrl = ref.read(weighingProvider(formulaId).notifier);
     final sim = ref.watch(simulatedScaleProvider);
-    final wide = MediaQuery.sizeOf(context).width >= 900;
+    final wide = isTwoPane(context);
 
     final main = <Widget>[
       ..._banners(context, ref, ctrl),
@@ -139,7 +141,9 @@ class _WeighingView extends ConsumerWidget {
             ? Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1240),
+                  constraints: const BoxConstraints(
+                    maxWidth: Breakpoints.workbenchMaxWidth,
+                  ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [

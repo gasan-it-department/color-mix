@@ -14,7 +14,7 @@ BoxDecoration _panel(BuildContext context, {Color? color, Color? border}) {
   final scheme = Theme.of(context).colorScheme;
   return BoxDecoration(
     color: color ?? scheme.surfaceContainerLowest,
-    borderRadius: BorderRadius.circular(24),
+    borderRadius: BorderRadius.circular(Radii.xl),
     border: Border.all(color: border ?? scheme.outlineVariant),
   );
 }
@@ -54,10 +54,7 @@ class PreparePanel extends StatelessWidget {
             placing
                 ? 'Put the empty bowl on the scale'
                 : 'Check it reads about 0.0 g',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontFamily: 'StudioSerif',
-              height: 1.15,
-            ),
+            style: theme.textTheme.headlineSmall?.copyWith(height: 1.15),
           ),
           const SizedBox(height: 16),
           BigWeight(
@@ -159,13 +156,8 @@ class PourPanel extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: _panel(
-        context,
-        color: bg,
-        border: zone == PourZone.under || zone == PourZone.waiting
-            ? null
-            : fg.withValues(alpha: 0.4),
-      ),
+      // the wash and the number's color say the zone, the edge stays plain
+      decoration: _panel(context, color: bg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -189,7 +181,6 @@ class PourPanel extends StatelessWidget {
                         Text(
                           s.step.name,
                           style: theme.textTheme.headlineSmall?.copyWith(
-                            fontFamily: 'StudioSerif',
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -225,7 +216,7 @@ class PourPanel extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           ClipRRect(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(Radii.sm),
             child: LinearProgressIndicator(
               value: progress == null ? 0 : progress.clamp(0.0, 1.0),
               minHeight: 10,
@@ -326,7 +317,6 @@ class _Stat extends StatelessWidget {
         Text(
           value,
           style: theme.textTheme.titleLarge?.copyWith(
-            fontFamily: 'StudioSans',
             fontWeight: FontWeight.w600,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
@@ -346,14 +336,14 @@ class _Overshoot extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = state;
     final theme = Theme.of(context);
-    final status = context.status;
 
+    // sits on the red wash of the over panel, that's the warning
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: status.danger.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(Radii.lg),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,7 +374,7 @@ class _Overshoot extends StatelessWidget {
               ),
               FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: status.danger,
+                  backgroundColor: context.status.danger,
                   foregroundColor: theme.colorScheme.onError,
                 ),
                 onPressed: s.canMoveOnAnyway

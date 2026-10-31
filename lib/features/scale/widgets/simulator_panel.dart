@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/bluetooth/simulated_scale.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
 import 'package:colormix_studio/core/widgets/section_card.dart';
@@ -132,7 +133,7 @@ class _HoldToPour extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: active ? scheme.primaryContainer : scheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(Radii.md),
             border: Border.all(
               color: active ? scheme.primary : scheme.outlineVariant,
             ),

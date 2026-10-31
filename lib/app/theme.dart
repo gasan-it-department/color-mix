@@ -9,7 +9,9 @@ abstract final class _Light {
   static const sunken = Color(0xFFEEEDE5);
   static const beige = Color(0xFFE4E5DA);
   static const line = Color(0xFFDDDFD3);
-  static const lineStrong = Color(0xFFACB1A2);
+  // field and control outlines: 3:1 against the card, the least a field's
+  // edge needs to be seen
+  static const lineStrong = Color(0xFF8E9383);
   static const ink = Color(0xFF252D26);
   static const ink2 = Color(0xFF646B60);
   static const accent = Color(0xFF435B46);
@@ -116,6 +118,104 @@ class StatusColors extends ThemeExtension<StatusColors> {
 
 extension StatusColorsX on BuildContext {
   StatusColors get status => Theme.of(this).extension<StatusColors>()!;
+}
+
+/// the styles screens kept rebuilding by hand: the small spaced label over a
+/// title, a page's serif heading, and the big numbers read off the scale
+@immutable
+class StudioType extends ThemeExtension<StudioType> {
+  const StudioType({
+    required this.eyebrow,
+    required this.pageTitle,
+    required this.figure,
+    required this.figureSmall,
+  });
+
+  /// 'YOUR COLOR TARGET'. 12 px, never smaller
+  final TextStyle eyebrow;
+
+  /// 'Your studio archive.' on phones, see [pageTitleFor]
+  final TextStyle pageTitle;
+
+  /// the live weight, sans with even-width digits
+  final TextStyle figure;
+
+  /// a total or a reading inside a card
+  final TextStyle figureSmall;
+
+  TextStyle pageTitleFor({required bool narrow}) =>
+      narrow ? pageTitle : pageTitle.copyWith(fontSize: 38);
+
+  static StudioType of(TextTheme t, ColorScheme scheme) {
+    const digits = [FontFeature.tabularFigures()];
+    return StudioType(
+      eyebrow: t.labelSmall!.copyWith(
+        fontSize: 12,
+        letterSpacing: 1.4,
+        fontWeight: FontWeight.w600,
+        color: scheme.onSurfaceVariant,
+      ),
+      pageTitle: t.headlineMedium!.copyWith(
+        fontSize: 28,
+        height: 1.15,
+        letterSpacing: -0.8,
+      ),
+      figure: t.displayLarge!.copyWith(
+        fontFamily: 'StudioSans',
+        fontSize: 64,
+        fontWeight: FontWeight.w500,
+        letterSpacing: -2.5,
+        height: 1.05,
+        fontFeatures: digits,
+      ),
+      figureSmall: t.displaySmall!.copyWith(
+        fontFamily: 'StudioSans',
+        fontWeight: FontWeight.w600,
+        letterSpacing: -1.5,
+        fontFeatures: digits,
+      ),
+    );
+  }
+
+  @override
+  StudioType copyWith({
+    TextStyle? eyebrow,
+    TextStyle? pageTitle,
+    TextStyle? figure,
+    TextStyle? figureSmall,
+  }) {
+    return StudioType(
+      eyebrow: eyebrow ?? this.eyebrow,
+      pageTitle: pageTitle ?? this.pageTitle,
+      figure: figure ?? this.figure,
+      figureSmall: figureSmall ?? this.figureSmall,
+    );
+  }
+
+  @override
+  StudioType lerp(StudioType? other, double t) {
+    if (other == null) return this;
+    return StudioType(
+      eyebrow: TextStyle.lerp(eyebrow, other.eyebrow, t)!,
+      pageTitle: TextStyle.lerp(pageTitle, other.pageTitle, t)!,
+      figure: TextStyle.lerp(figure, other.figure, t)!,
+      figureSmall: TextStyle.lerp(figureSmall, other.figureSmall, t)!,
+    );
+  }
+}
+
+extension StudioTypeX on BuildContext {
+  StudioType get type => Theme.of(this).extension<StudioType>()!;
+}
+
+/// corner sizes. a hairline bar, a tag or small swatch, a control (button,
+/// field, menu), a tile in a list, a card or sheet
+abstract final class Radii {
+  static const double bar = 2;
+  static const double sm = 8;
+  static const double md = 12;
+  static const double lg = 16;
+  static const double xl = 20;
 }
 
 abstract final class AppTheme {
@@ -251,14 +351,16 @@ abstract final class AppTheme {
       bodyMedium: text.bodyMedium?.copyWith(height: 1.45, letterSpacing: 0),
       bodySmall: text.bodySmall?.copyWith(height: 1.4, letterSpacing: 0),
       labelLarge: text.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+      // material's 11 px is too small to read at the bench
+      labelSmall: text.labelSmall?.copyWith(fontSize: 12),
     );
 
     final cardShape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(Radii.xl),
       side: BorderSide(color: scheme.outlineVariant),
     );
     final controlShape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(Radii.md),
     );
     const flat = WidgetStatePropertyAll<double>(0);
 
@@ -266,7 +368,7 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: scheme.surface,
       canvasColor: scheme.surface,
       textTheme: textTheme,
-      extensions: [status],
+      extensions: [status, StudioType.of(textTheme, scheme)],
       splashFactory: InkRipple.splashFactory,
       appBarTheme: AppBarThemeData(
         backgroundColor: scheme.surface,
@@ -294,7 +396,7 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         indicatorColor: scheme.primaryContainer,
         indicatorShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(Radii.md),
         ),
         height: 72,
         iconTheme: WidgetStateProperty.resolveWith(
@@ -318,7 +420,7 @@ abstract final class AppTheme {
         elevation: 0,
         indicatorColor: scheme.primaryContainer,
         indicatorShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(Radii.md),
         ),
         selectedLabelTextStyle: textTheme.labelLarge?.copyWith(
           color: scheme.onSurface,
@@ -378,7 +480,9 @@ abstract final class AppTheme {
         backgroundColor: Colors.transparent,
         selectedColor: scheme.primaryContainer,
         labelStyle: textTheme.bodyMedium,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.sm),
+        ),
         side: WidgetStateBorderSide.resolveWith(
           (states) => BorderSide(
             color: states.contains(WidgetState.selected)
@@ -415,15 +519,15 @@ abstract final class AppTheme {
           color: scheme.onSurfaceVariant,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(Radii.md),
           borderSide: BorderSide(color: scheme.outline),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(Radii.md),
           borderSide: BorderSide(color: scheme.outline),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(Radii.md),
           borderSide: BorderSide(color: scheme.primary, width: 2),
         ),
       ),
@@ -435,18 +539,22 @@ abstract final class AppTheme {
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: scheme.primary,
         linearTrackColor: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(Radii.sm),
       ),
       listTileTheme: ListTileThemeData(
         iconColor: scheme.onSurfaceVariant,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.md),
+        ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: scheme.surfaceContainerLowest,
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        shape: cardShape.copyWith(borderRadius: BorderRadius.circular(20)),
+        shape: cardShape.copyWith(
+          borderRadius: BorderRadius.circular(Radii.xl),
+        ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: scheme.surfaceContainerLowest,
@@ -457,7 +565,9 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         showDragHandle: true,
         shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(Radii.xl),
+          ),
           side: BorderSide(color: scheme.outlineVariant),
         ),
       ),
@@ -466,7 +576,9 @@ abstract final class AppTheme {
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        shape: cardShape.copyWith(borderRadius: BorderRadius.circular(12)),
+        shape: cardShape.copyWith(
+          borderRadius: BorderRadius.circular(Radii.md),
+        ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
@@ -475,12 +587,14 @@ abstract final class AppTheme {
         contentTextStyle: textTheme.bodyMedium?.copyWith(
           color: scheme.onInverseSurface,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.md),
+        ),
       ),
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: scheme.inverseSurface,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(Radii.sm),
         ),
         textStyle: textTheme.bodySmall?.copyWith(
           color: scheme.onInverseSurface,

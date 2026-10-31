@@ -148,6 +148,18 @@ Notes to self on what I picked and why. Spec is the blueprint docx.
 - Schema v4: `formulas.unit` (g by default, so every older formula reads as grams), `formulas.developer_density_milli` and `formula_ingredients.density_milli`, both null for the usual figure. Backups carry them too. An older file without them restores in grams, still backup version 1. The migration test now builds v1, v2 and v3 databases.
 - The enum field for "grams" / "ounces" is `label`, not `name`. `name` is the enum's own and goes into the db, settings and backups. Called `name` at first, it shadowed the real one and wrote "grams" where "g" was read back.
 
+## Theme rules (after the redesign)
+
+- Everything a screen looks like comes from `lib/app/theme.dart`: the colors (light and dark), `StatusColors` for the weighing states, `StudioType` for the few styles screens kept rebuilding (the small spaced label over a title, a page's serif heading, the big numbers), and `Radii` for corners (2 bar, 8 small, 12 control, 16 tile, 20 card). Screens don't set a font family or a raw corner size.
+- No shadows anywhere, the swatch fan on Home included: a 1 px line keeps things apart.
+- A state is a wash plus its color (`successWash` + `success`), never a color mixed down by hand. The washes are designed per theme, a hand mix comes out wrong in dark mode.
+- Selected nav is the pale accent wash in all three navs, bar, rail and sidebar.
+- Nothing under 12 px. `labelSmall` is 12 in the theme.
+- Field and control outlines are 3:1 against the card (`lineStrong` #8E9383), the least a field's edge needs.
+- Widths are named in `Breakpoints`: phone under 600 (`isNarrow`), two columns from 900 (`isTwoPane`), content 1080, editor and weighing 1240, a session's record 880, calibration 680. Settings uses `AppPage` like the tabs.
+- The two fonts' OFL texts show on the licences page (Settings, About, Licences), registered in `main()`.
+- `redesign_layout_test` walks every screen, camera, editor, start sheet and weighing included, at 360, 800 and 1280 px, light at 1× text and dark at 1.5×.
+
 ## Color from the camera (after phase 8)
 
 - Color Studio has a third mode, Camera: one still of the hair, the color read off it becomes the custom target. Close, not exact, and the screens say so.

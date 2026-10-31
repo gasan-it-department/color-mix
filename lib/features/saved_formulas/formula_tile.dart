@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/core/utils/color_utils.dart';
 import 'package:colormix_studio/shared/models/color_formula.dart';
@@ -31,7 +32,7 @@ class FormulaTile extends StatelessWidget {
     return Material(
       color: scheme.surfaceContainerLowest,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(Radii.lg),
         side: BorderSide(color: scheme.outlineVariant),
       ),
       clipBehavior: Clip.antiAlias,
@@ -51,10 +52,8 @@ class FormulaTile extends StatelessWidget {
                       height: wide ? 76 : 66,
                       decoration: BoxDecoration(
                         color: colorFromRgb(f.targetRgb),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: scheme.outline.withValues(alpha: 0.3),
-                        ),
+                        borderRadius: BorderRadius.circular(Radii.md),
+                        border: Border.all(color: scheme.outlineVariant),
                       ),
                       clipBehavior: Clip.antiAlias,
                       alignment: Alignment.bottomCenter,
@@ -112,7 +111,6 @@ class FormulaTile extends StatelessWidget {
                               'Updated $date',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
-                                fontSize: 11,
                               ),
                             ),
                           ],

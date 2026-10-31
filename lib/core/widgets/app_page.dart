@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/constants/app_info.dart';
 
 /// page scaffold shared by the tabs. on phones it adds the settings button
@@ -23,8 +24,7 @@ class AppPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final narrow = MediaQuery.sizeOf(context).width < Breakpoints.rail;
-    final theme = Theme.of(context);
+    final narrow = isNarrow(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -37,14 +37,7 @@ class AppPage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (!narrow) ...[
-                  Text(
-                    'COLORMIX / WORKSPACE',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      letterSpacing: 1.6,
-                      fontSize: 10,
-                    ),
-                  ),
+                  Text('COLORMIX / WORKSPACE', style: context.type.eyebrow),
                   const SizedBox(height: 5),
                 ],
                 Text(title),
@@ -74,8 +67,16 @@ class AppPage extends StatelessWidget {
   }
 }
 
+/// phone layout: bottom bar, tighter padding, smaller headings
+bool isNarrow(BuildContext context) =>
+    MediaQuery.sizeOf(context).width < Breakpoints.rail;
+
+/// wide enough for two columns side by side
+bool isTwoPane(BuildContext context) =>
+    MediaQuery.sizeOf(context).width >= Breakpoints.twoPane;
+
 /// horizontal page padding, tighter on phones
 EdgeInsets pagePadding(BuildContext context) {
-  final narrow = MediaQuery.sizeOf(context).width < Breakpoints.rail;
+  final narrow = isNarrow(context);
   return EdgeInsets.fromLTRB(narrow ? 20 : 32, 12, narrow ? 20 : 32, 32);
 }

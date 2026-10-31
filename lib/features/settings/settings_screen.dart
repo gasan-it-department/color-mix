@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/bluetooth/ble_scale_device.dart';
 import 'package:colormix_studio/core/bluetooth/scale_providers.dart';
 import 'package:colormix_studio/core/bluetooth/simulated_scale.dart';
 import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/core/utils/weight_format.dart';
+import 'package:colormix_studio/core/widgets/app_page.dart';
 import 'package:colormix_studio/core/widgets/connection_chip.dart';
 import 'package:colormix_studio/core/widgets/section_card.dart';
 import 'package:colormix_studio/features/backup/backup_card.dart';
@@ -32,87 +34,77 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final narrow = MediaQuery.sizeOf(context).width < Breakpoints.rail;
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1080),
-          child: ListView(
-            padding: EdgeInsets.fromLTRB(
-              narrow ? 20 : 32,
-              16,
-              narrow ? 20 : 32,
-              32,
-            ),
-            children: [
-              Text(
-                'A studio that works your way.',
-                style: theme.textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Fine-tune your workspace, your scale, and your mixing routine.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 24),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  if (constraints.maxWidth >= 840) {
-                    return const Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            children: [
-                              _Appearance(),
-                              SizedBox(height: 16),
-                              _Formulas(),
-                              SizedBox(height: 16),
-                              _Scale(),
-                              SizedBox(height: 16),
-                              _About(),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 20),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              _Weighing(),
-                              SizedBox(height: 16),
-                              BackupCard(),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-                  return const Column(
-                    children: [
-                      _Appearance(),
-                      SizedBox(height: 16),
-                      _Weighing(),
-                      SizedBox(height: 16),
-                      _Formulas(),
-                      SizedBox(height: 16),
-                      _Scale(),
-                      SizedBox(height: 16),
-                      BackupCard(),
-                      SizedBox(height: 16),
-                      _About(),
-                    ],
-                  );
-                },
-              ),
-            ],
+    // the same frame as the tabs, without a settings button on itself
+    return AppPage(
+      title: 'Settings',
+      showSettings: false,
+      body: ListView(
+        padding: pagePadding(context),
+        children: [
+          Text(
+            'A studio that works your way.',
+            style: context.type.pageTitleFor(narrow: isNarrow(context)),
           ),
-        ),
+          const SizedBox(height: 8),
+          Text(
+            'Fine-tune your workspace, your scale, and your mixing routine.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 24),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth >= 840) {
+                return const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _Appearance(),
+                          SizedBox(height: 16),
+                          _Formulas(),
+                          SizedBox(height: 16),
+                          _Scale(),
+                          SizedBox(height: 16),
+                          _About(),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _Weighing(),
+                          SizedBox(height: 16),
+                          BackupCard(),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return const Column(
+                children: [
+                  _Appearance(),
+                  SizedBox(height: 16),
+                  _Weighing(),
+                  SizedBox(height: 16),
+                  _Formulas(),
+                  SizedBox(height: 16),
+                  _Scale(),
+                  SizedBox(height: 16),
+                  BackupCard(),
+                  SizedBox(height: 16),
+                  _About(),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -426,6 +418,16 @@ class _About extends StatelessWidget {
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
+          ),
+          const SizedBox(height: 8),
+          // the packages' and the two fonts' licences, see main()
+          TextButton(
+            onPressed: () => showLicensePage(
+              context: context,
+              applicationName: AppInfo.name,
+              applicationVersion: 'prototype ${AppInfo.version}',
+            ),
+            child: const Text('Licences'),
           ),
         ],
       ),

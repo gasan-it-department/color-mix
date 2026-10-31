@@ -28,6 +28,7 @@ import 'package:colormix_studio/features/weighing/weighing_state.dart'
 import 'package:colormix_studio/shared/models/color_formula.dart';
 import 'package:colormix_studio/shared/widgets/color_swatch_dot.dart';
 import 'package:colormix_studio/shared/widgets/label_tag.dart';
+import 'package:colormix_studio/core/widgets/app_page.dart';
 
 /// new formula for the picked color, or a saved one by id
 class FormulaEditorScreen extends ConsumerWidget {
@@ -480,7 +481,7 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
   @override
   Widget build(BuildContext context) {
     final r = calculateFormula(_inputs);
-    final wide = MediaQuery.sizeOf(context).width >= 900;
+    final wide = isTwoPane(context);
 
     final result = ResultCard(
       partNames: [for (final p in _parts) p.name.text],
@@ -600,7 +601,9 @@ class _FormulaEditorState extends ConsumerState<_FormulaEditor> {
             ? Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1240),
+                  constraints: const BoxConstraints(
+                    maxWidth: Breakpoints.workbenchMaxWidth,
+                  ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -673,7 +676,7 @@ class _HeaderCard extends StatelessWidget {
                 height: 60,
                 decoration: BoxDecoration(
                   color: colorFromRgb(seed.targetRgb),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(Radii.lg),
                   border: Border.all(color: scheme.outlineVariant),
                 ),
               ),
@@ -810,7 +813,6 @@ class _DyeCard extends StatelessWidget {
               ],
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontFamily: 'StudioSans',
                 fontWeight: FontWeight.w600,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
@@ -1169,7 +1171,6 @@ class _SaveBar extends StatelessWidget {
                     Text(
                       mixture,
                       style: theme.textTheme.titleLarge?.copyWith(
-                        fontFamily: 'StudioSans',
                         fontWeight: FontWeight.w600,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),

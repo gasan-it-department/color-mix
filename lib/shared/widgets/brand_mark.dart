@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/constants/app_info.dart';
 
 /// three overlapping drops for colour a, b and c
@@ -69,12 +70,10 @@ class BrandLockup extends StatelessWidget {
                     letterSpacing: -0.8,
                   ),
                 ),
+                // spaced by the style, not typed spaces
                 Text(
-                  'S T U D I O',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontSize: 9,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                  'STUDIO',
+                  style: context.type.eyebrow.copyWith(letterSpacing: 3.2),
                 ),
               ],
             ),

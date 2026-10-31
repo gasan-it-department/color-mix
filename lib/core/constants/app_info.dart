@@ -10,7 +10,19 @@ abstract final class Breakpoints {
   /// side rail shows labels from here
   static const double sidebar = 1100;
 
+  /// the editor and the weighing screen go two columns from here
+  static const double twoPane = 900;
+
   static const double contentMaxWidth = 1080;
+
+  /// the editor and the weighing screen, two columns
+  static const double workbenchMaxWidth = 1240;
+
+  /// one column to read: a session's record
+  static const double readingMaxWidth = 880;
+
+  /// one step at a time: calibration
+  static const double wizardMaxWidth = 680;
 }
 
 abstract final class Routes {

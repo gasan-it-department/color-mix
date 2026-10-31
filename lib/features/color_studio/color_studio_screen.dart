@@ -91,7 +91,6 @@ class _PickerPane extends ConsumerWidget {
           Text(
             'A shade to start with.',
             style: theme.textTheme.headlineLarge?.copyWith(
-              fontFamily: 'StudioSerif',
               fontWeight: FontWeight.w400,
               letterSpacing: -0.8,
             ),

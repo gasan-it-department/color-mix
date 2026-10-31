@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:colormix_studio/app/theme.dart';
 import 'package:colormix_studio/core/constants/app_info.dart';
 import 'package:colormix_studio/core/widgets/app_page.dart';
 import 'package:colormix_studio/core/widgets/confirm_sheet.dart';
@@ -53,7 +54,7 @@ class _SavedFormulasScreenState extends ConsumerState<SavedFormulasScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final narrow = MediaQuery.sizeOf(context).width < Breakpoints.rail;
+    final narrow = isNarrow(context);
     final pad = pagePadding(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -98,73 +99,77 @@ class _SavedFormulasScreenState extends ConsumerState<SavedFormulasScreen> {
 
     return AppPage(
       title: 'Saved formulas',
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(pad.left, 8, pad.right, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Your studio archive.',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontFamily: 'StudioSerif',
-                    fontSize: narrow ? 28 : 38,
-                    height: 1.15,
-                    letterSpacing: -0.8,
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(pad.left, 8, pad.right, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your studio archive.',
+                    style: context.type.pageTitleFor(narrow: narrow),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Keep the formula. Learn from every mix.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(pad.left, 0, pad.right, 16),
-            child: LayoutBuilder(
-              builder: (context, constraints) => constraints.maxWidth < 600
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [switcher, const SizedBox(height: 12), search],
-                    )
-                  : Row(
-                      children: [
-                        switcher,
-                        const SizedBox(width: 24),
-                        Expanded(child: search),
-                      ],
+                  const SizedBox(height: 8),
+                  Text(
+                    'Keep the formula. Learn from every mix.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
                     ),
+                  ),
+                ],
+              ),
             ),
           ),
-          Expanded(
-            child: _view == SavedView.formulas
-                ? _formulas(context, pad)
-                : _history(context, pad),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(pad.left, 0, pad.right, 16),
+              child: LayoutBuilder(
+                builder: (context, constraints) => constraints.maxWidth < 600
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          switcher,
+                          const SizedBox(height: 12),
+                          search,
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          switcher,
+                          const SizedBox(width: 24),
+                          Expanded(child: search),
+                        ],
+                      ),
+              ),
+            ),
           ),
+          ...(_view == SavedView.formulas
+              ? _formulas(context, pad)
+              : _history(context, pad)),
         ],
       ),
     );
   }
 
-  Widget _formulas(BuildContext context, EdgeInsets pad) {
+  List<Widget> _formulas(BuildContext context, EdgeInsets pad) {
     return switch (ref.watch(formulasProvider)) {
-      AsyncData(:final value) when value.isEmpty => EmptyState(
-        icon: Icons.receipt_long_outlined,
-        title: 'No saved formulas yet',
-        message:
-            'Pick a target color, build the formula and save it. '
-            'It will show up here.',
-        action: FilledButton.tonal(
-          onPressed: () => context.go(Routes.colors),
-          child: const Text('New color formula'),
+      AsyncData(:final value) when value.isEmpty => [
+        SliverToBoxAdapter(
+          child: EmptyState(
+            icon: Icons.receipt_long_outlined,
+            title: 'No saved formulas yet',
+            message:
+                'Pick a target color, build the formula and save it. '
+                'It will show up here.',
+            action: FilledButton.tonal(
+              onPressed: () => context.go(Routes.colors),
+              child: const Text('New color formula'),
+            ),
+          ),
         ),
-      ),
+      ],
       AsyncData(:final value) => _list(
         pad,
         value.where(_formulaMatches).toList(),
@@ -173,60 +178,93 @@ class _SavedFormulasScreenState extends ConsumerState<SavedFormulasScreen> {
           menu: _FormulaMenu(formula: f),
         ),
       ),
-      AsyncError() => const EmptyState(
-        icon: Icons.error_outline,
-        title: 'Couldn\'t load your formulas',
-        message:
-            'Close the app and open it again. Your saved formulas '
-            'are still on this device.',
-      ),
-      _ => const Center(child: CircularProgressIndicator()),
+      AsyncError() => const [
+        SliverToBoxAdapter(
+          child: EmptyState(
+            icon: Icons.error_outline,
+            title: 'Couldn\'t load your formulas',
+            message:
+                'Close the app and open it again. Your saved formulas '
+                'are still on this device.',
+          ),
+        ),
+      ],
+      _ => const [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ),
+      ],
     };
   }
 
-  Widget _history(BuildContext context, EdgeInsets pad) {
+  List<Widget> _history(BuildContext context, EdgeInsets pad) {
     return switch (ref.watch(sessionsProvider(null))) {
-      AsyncData(:final value) when value.isEmpty => const EmptyState(
-        icon: Icons.history,
-        title: 'No weighing sessions yet',
-        message:
-            'Weigh a saved formula and the session shows up here, '
-            'finished or not.',
-      ),
+      AsyncData(:final value) when value.isEmpty => const [
+        SliverToBoxAdapter(
+          child: EmptyState(
+            icon: Icons.history,
+            title: 'No weighing sessions yet',
+            message:
+                'Weigh a saved formula and the session shows up here, '
+                'finished or not.',
+          ),
+        ),
+      ],
       AsyncData(:final value) => _list(
         pad,
         value.where(_sessionMatches).toList(),
         (s) => SessionTile(session: s),
       ),
-      AsyncError() => const EmptyState(
-        icon: Icons.error_outline,
-        title: 'Couldn\'t load the history',
-        message: 'Close the app and open it again.',
-      ),
-      _ => const Center(child: CircularProgressIndicator()),
+      AsyncError() => const [
+        SliverToBoxAdapter(
+          child: EmptyState(
+            icon: Icons.error_outline,
+            title: 'Couldn\'t load the history',
+            message: 'Close the app and open it again.',
+          ),
+        ),
+      ],
+      _ => const [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ),
+      ],
     };
   }
 
-  Widget _list<T>(EdgeInsets pad, List<T> items, Widget Function(T) tile) {
+  List<Widget> _list<T>(
+    EdgeInsets pad,
+    List<T> items,
+    Widget Function(T) tile,
+  ) {
     if (items.isEmpty) {
-      return EmptyState(
-        icon: Icons.search_off,
-        title: 'Nothing matches "${_search.text.trim()}"',
-        message: _view == SavedView.formulas
-            ? 'Search looks at formula names and notes.'
-            : 'Search looks at formula and scale names.',
-        action: TextButton(
-          onPressed: () => setState(_search.clear),
-          child: const Text('Clear search'),
+      return [
+        SliverToBoxAdapter(
+          child: EmptyState(
+            icon: Icons.search_off,
+            title: 'Nothing matches "${_search.text.trim()}"',
+            message: _view == SavedView.formulas
+                ? 'Search looks at formula names and notes.'
+                : 'Search looks at formula and scale names.',
+            action: TextButton(
+              onPressed: () => setState(_search.clear),
+              child: const Text('Clear search'),
+            ),
+          ),
         ),
-      );
+      ];
     }
     final theme = Theme.of(context);
     final type = _view == SavedView.formulas ? 'formula' : 'session';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
+    return [
+      SliverToBoxAdapter(
+        child: Padding(
           padding: EdgeInsets.fromLTRB(pad.left, 0, pad.right, 12),
           child: Wrap(
             alignment: WrapAlignment.spaceBetween,
@@ -249,16 +287,16 @@ class _SavedFormulasScreenState extends ConsumerState<SavedFormulasScreen> {
             ],
           ),
         ),
-        Expanded(
-          child: ListView.separated(
-            padding: pad.copyWith(top: 0),
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
-            itemBuilder: (context, i) => tile(items[i]),
-          ),
+      ),
+      SliverPadding(
+        padding: pad.copyWith(top: 0),
+        sliver: SliverList.separated(
+          itemCount: items.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          itemBuilder: (context, i) => tile(items[i]),
         ),
-      ],
-    );
+      ),
+    ];
   }
 }
 

@@ -16,6 +16,7 @@ import 'package:colormix_studio/features/formulation/formula_math.dart';
 import 'package:colormix_studio/features/settings/settings_providers.dart';
 import 'package:colormix_studio/features/weighing/widgets/weighing_bits.dart';
 import 'package:colormix_studio/shared/widgets/label_tag.dart';
+import 'package:colormix_studio/core/widgets/app_page.dart';
 
 enum CalStep { empty, reference, check }
 
@@ -126,12 +127,12 @@ class _WizardState extends ConsumerState<_Wizard> {
   Widget build(BuildContext context) {
     final connection = ref.watch(scaleProvider.select((s) => s.connection));
     final connected = connection == ScaleConnectionState.connectedSupported;
-    final narrow = MediaQuery.sizeOf(context).width < Breakpoints.rail;
+    final narrow = isNarrow(context);
 
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680),
+        constraints: const BoxConstraints(maxWidth: Breakpoints.wizardMaxWidth),
         child: ListView(
           padding: EdgeInsets.fromLTRB(
             narrow ? 16 : 24,
@@ -417,7 +418,7 @@ class _Steps extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
               decoration: BoxDecoration(
                 color: step == current ? scheme.primaryContainer : null,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(Radii.md),
                 border: Border.all(
                   color: step == current
                       ? scheme.primaryContainer
@@ -487,12 +488,7 @@ class _LiveReading extends ConsumerWidget {
                 Text('Live reading', style: muted),
                 Text(
                   reading == null ? '—' : formatMilligrams(reading.milligrams),
-                  style: theme.textTheme.displaySmall?.copyWith(
-                    fontFamily: 'StudioSans',
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: -1,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
+                  style: context.type.figureSmall,
                 ),
                 if (reading?.uncalibrated ?? false)
                   Text('Rough until calibrated', style: muted),

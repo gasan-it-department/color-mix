@@ -111,7 +111,7 @@ class _ConnectedScale extends ConsumerWidget {
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(Radii.lg),
               ),
               child: Icon(
                 Icons.sensors_outlined,
@@ -198,7 +198,7 @@ class _ConnectedScale extends ConsumerWidget {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(Radii.lg),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,12 +212,7 @@ class _ConnectedScale extends ConsumerWidget {
                         connected && reading != null
                             ? formatMilligrams(reading.milligrams)
                             : '—',
-                        style: theme.textTheme.displayLarge?.copyWith(
-                          fontFamily: 'StudioSans',
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: -2,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
+                        style: context.type.figure,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -448,7 +443,7 @@ class _FoundTile extends ConsumerWidget {
               color: found.kind == ScaleAdapterType.esp32Custom
                   ? scheme.primaryContainer
                   : scheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(Radii.md),
             ),
             child: Icon(
               found.isScale ? Icons.scale_outlined : Icons.bluetooth,
@@ -529,7 +524,7 @@ class _SignalBars extends StatelessWidget {
                 color: i < bars
                     ? scheme.onSurfaceVariant
                     : scheme.outlineVariant,
-                borderRadius: BorderRadius.circular(1),
+                borderRadius: BorderRadius.circular(Radii.bar),
               ),
             ),
         ],
